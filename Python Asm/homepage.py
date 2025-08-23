@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
+from cgpa import *
 
 class HomePage:
     def __init__(self, master):
@@ -98,7 +99,8 @@ class HomePage:
     
     def open_application(self, app_name):
         if app_name == "CGPA & GPA Calculator":
-            messagebox.showinfo("Info", "Opening CGPA & GPA Calculator (to be implemented)")
+            calc_window = tk.Toplevel(self.master)
+            CalculatorApp(calc_window)
         elif app_name == "Homework Planner":
             messagebox.showinfo("Info", "Opening Homework Planner (to be implemented)")
         elif app_name == "Simple Reminder":
