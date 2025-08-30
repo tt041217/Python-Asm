@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from cgpa import *
+from reminders import *
 
 class HomePage:
     def __init__(self, master):
@@ -104,7 +105,8 @@ class HomePage:
         elif app_name == "Homework Planner":
             messagebox.showinfo("Info", "Opening Homework Planner (to be implemented)")
         elif app_name == "Simple Reminder":
-            messagebox.showinfo("Info", "Opening Simple Reminder (to be implemented)")
+            reminders_window = tk.Toplevel(self.master)
+            ReminderApp(reminders_window)
         else:
             messagebox.showinfo("Info", f"Opening {app_name}")
 
