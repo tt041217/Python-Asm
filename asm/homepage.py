@@ -3,6 +3,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw, ImageOps
 from cgpa import *
 from reminders import *
+from login import LoginWindow
 
 class HomePage:
     def __init__(self, master):
@@ -29,7 +30,7 @@ class HomePage:
         self.header.pack(pady=30)
         
         # Button frame
-        self.button_frame = tk.Frame(master, bg="#0f2134")
+        self.button_frame = tk.Frame(master, bg="#74b9ff")
         self.button_frame.pack(expand=True)
 
         # App cards
@@ -38,8 +39,8 @@ class HomePage:
         self.create_app_card("reminder.png", "Simple Reminder", 0, 2)
 
         # Footer
-        self.footer = tk.Label(master, text="© 2025 My Applications. All rights reserved.", 
-                             font=('Arial', 10), bg="#796565", fg="white")
+        self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨", 
+                             font=('Arial', 20), bg="#3f6e9d", fg="white")
         self.footer.pack(side='bottom', pady=15)
 
     def resize_background(self, event):
@@ -54,10 +55,27 @@ class HomePage:
         card = tk.Frame(self.button_frame, bg="white", bd=0, relief="flat")
         card.grid(row=row, column=col, padx=30, pady=10, ipadx=10, ipady=10)
 
+        # Add shadow effect
+        card.config(highlightbackground="#b2bec3", highlightthickness=4)
+
         if self.image_exists(image_file):
             img = Image.open(image_file).resize((180, 180), Image.LANCZOS)
         else:
             img = self.create_default_image(text)
+
+        # Add rounded corners to image
+        img = img.convert("RGBA")
+        radius = 30
+        circle = Image.new('L', (radius * 2, radius * 2), 0)
+        draw = ImageDraw.Draw(circle)
+        draw.ellipse((0, 0, radius * 2, radius * 2), fill=255)
+        alpha = Image.new('L', img.size, 255)
+        w, h = img.size
+        alpha.paste(circle.crop((0, 0, radius, radius)), (0, 0))
+        alpha.paste(circle.crop((0, radius, radius, radius * 2)), (0, h - radius))
+        alpha.paste(circle.crop((radius, 0, radius * 2, radius)), (w - radius, 0))
+        alpha.paste(circle.crop((radius, radius, radius * 2, radius * 2)), (w - radius, h - radius))
+        img.putalpha(alpha)
 
         img = ImageOps.expand(img, border=10, fill="white")
         photo = ImageTk.PhotoImage(img)
@@ -124,7 +142,12 @@ class HomePage:
             messagebox.showinfo("Info", f"Opening {app_name}")
 
 
-if __name__ == "__main__":
+def start_main_app():
     root = tk.Tk()
     app = HomePage(root)
     root.mainloop()
+
+if __name__ == "__main__":
+    login_root = tk.Tk()
+    LoginWindow(login_root, on_success=start_main_app)
+    login_root.mainloop()
