@@ -3,6 +3,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw, ImageOps
 from cgpa import *
 from reminders import *
+from login import LoginWindow
 
 class HomePage:
     def __init__(self, master):
@@ -38,8 +39,8 @@ class HomePage:
         self.create_app_card("reminder.png", "Simple Reminder", 0, 2)
 
         # Footer
-        self.footer = tk.Label(master, text="© 2025 My Applications. All rights reserved.", 
-                             font=('Arial', 10), bg="#796565", fg="white")
+        self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨", 
+                             font=('Arial', 20), bg="#3f6e9d", fg="white")
         self.footer.pack(side='bottom', pady=15)
 
     def resize_background(self, event):
@@ -141,7 +142,12 @@ class HomePage:
             messagebox.showinfo("Info", f"Opening {app_name}")
 
 
-if __name__ == "__main__":
+def start_main_app():
     root = tk.Tk()
     app = HomePage(root)
     root.mainloop()
+
+if __name__ == "__main__":
+    login_root = tk.Tk()
+    LoginWindow(login_root, on_success=start_main_app)
+    login_root.mainloop()
