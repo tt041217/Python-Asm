@@ -5,9 +5,11 @@ import time
 import json
 import os
 from datetime import datetime, timedelta
-from tkcalendar import DateEntry  # <-- Add this import
+from tkcalendar import DateEntry
 
 DATA_FILE = "reminders.json"
+
+REM_FONT = ('Arial', 11)  # Only used in Reminder app
 
 class Reminder:
     def __init__(self, title, dt, note="", repeat="None", status="Pending"):
@@ -65,13 +67,13 @@ class ReminderApp:
         input_frame = tk.LabelFrame(master, text="Set a Reminder", bg="#e0f7fa", font=('Arial', 12, 'bold'))
         input_frame.pack(padx=15, pady=15, fill="x")
 
-        tk.Label(input_frame, text="Title:", bg="#e0f7fa", font=('Arial', 11)).grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        self.title_entry = tk.Entry(input_frame, font=('Arial', 11))
+        tk.Label(input_frame, text="Title:", bg="#e0f7fa", font=REM_FONT).grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.title_entry = tk.Entry(input_frame, font=REM_FONT)
         self.title_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
 
-        tk.Label(input_frame, text="Date:", bg="#e0f7fa", font=('Arial', 11)).grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(input_frame, text="Date:", bg="#e0f7fa", font=REM_FONT).grid(row=1, column=0, sticky="w", padx=5, pady=5)
         self.date_entry = DateEntry(
-            input_frame, font=('Arial', 11), date_pattern='yyyy-mm-dd',
+            input_frame, font=REM_FONT, date_pattern='yyyy-mm-dd',
             showweeknumbers=False, foreground='gray'
         )
         self.date_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
@@ -90,7 +92,7 @@ class ReminderApp:
         self.date_entry.bind("<FocusOut>", on_focus_out)
         self.date_entry.configure(foreground='gray')
 
-        tk.Label(input_frame, text="Time:", bg="#e0f7fa", font=('Arial', 11)).grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(input_frame, text="Time:", bg="#e0f7fa", font=REM_FONT).grid(row=2, column=0, sticky="w", padx=5, pady=5)
 
         # Create a frame for time selection to avoid grid gaps
         time_frame = tk.Frame(input_frame, bg="#e0f7fa")
@@ -103,26 +105,26 @@ class ReminderApp:
         minutes = [f"{m:02d}" for m in range(0, 60)]
         ampm = ["AM", "PM"]
 
-        self.hour_menu = ttk.Combobox(time_frame, textvariable=self.hour_var, values=hours, width=2, state="readonly", font=('Arial', 11))
+        self.hour_menu = ttk.Combobox(time_frame, textvariable=self.hour_var, values=hours, width=2, state="readonly", font=REM_FONT)
         self.hour_menu.pack(side="left", padx=(0,2))
-        self.minute_menu = ttk.Combobox(time_frame, textvariable=self.minute_var, values=minutes, width=2, state="readonly", font=('Arial', 11))
+        self.minute_menu = ttk.Combobox(time_frame, textvariable=self.minute_var, values=minutes, width=2, state="readonly", font=REM_FONT)
         self.minute_menu.pack(side="left", padx=(0,2))
-        self.ampm_menu = ttk.Combobox(time_frame, textvariable=self.ampm_var, values=ampm, width=3, state="readonly", font=('Arial', 11))
+        self.ampm_menu = ttk.Combobox(time_frame, textvariable=self.ampm_var, values=ampm, width=3, state="readonly", font=REM_FONT)
         self.ampm_menu.pack(side="left", padx=(0,2))
 
-        tk.Label(input_frame, text="Repeat:", bg="#e0f7fa", font=('Arial', 11)).grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(input_frame, text="Repeat:", bg="#e0f7fa", font=REM_FONT).grid(row=3, column=0, sticky="w", padx=5, pady=5)
         self.repeat_var = tk.StringVar(value="None")
         repeat_options = ["None", "Daily", "Weekly"]
-        self.repeat_menu = ttk.Combobox(input_frame, textvariable=self.repeat_var, values=repeat_options, state="readonly", font=('Arial', 11))
+        self.repeat_menu = ttk.Combobox(input_frame, textvariable=self.repeat_var, values=repeat_options, state="readonly", font=REM_FONT)
         self.repeat_menu.grid(row=3, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
 
-        tk.Label(input_frame, text="Note (optional):", bg="#e0f7fa", font=('Arial', 11)).grid(row=4, column=0, sticky="nw", padx=5, pady=5)
-        self.note_text = tk.Text(input_frame, height=3, font=('Arial', 11))
+        tk.Label(input_frame, text="Note (optional):", bg="#e0f7fa", font=REM_FONT).grid(row=4, column=0, sticky="nw", padx=5, pady=5)
+        self.note_text = tk.Text(input_frame, height=3, font=REM_FONT)
         self.note_text.grid(row=4, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
 
         input_frame.columnconfigure(1, weight=1)
 
-        self.add_btn = tk.Button(input_frame, text="Add Reminder", command=self.add_reminder, bg="#00796b", fg="white", font=('Arial', 11, 'bold'))
+        self.add_btn = tk.Button(input_frame, text="Add Reminder", command=self.add_reminder, bg="#00796b", fg="white", font=REM_FONT)
         self.add_btn.grid(row=5, column=0, columnspan=4, pady=10)
 
         # --- Reminders List ---
@@ -162,14 +164,26 @@ class ReminderApp:
         # Buttons for delete and edit
         btn_frame = tk.Frame(master, bg="#f7f7f7")
         btn_frame.pack(pady=5)
-        self.del_btn = tk.Button(btn_frame, text="Delete Selected", command=self.delete_reminder, bg="#d32f2f", fg="white", font=('Arial', 11))
+        self.del_btn = tk.Button(btn_frame, text="Delete Selected", command=self.delete_reminder, bg="#d32f2f", fg="white", font=REM_FONT)
         self.del_btn.pack(side="left", padx=10)
 
-        self.edit_btn = tk.Button(btn_frame, text="Edit Selected", command=self.edit_reminder, bg="#ffa000", fg="white", font=('Arial', 11))
+        self.edit_btn = tk.Button(btn_frame, text="Edit Selected", command=self.edit_reminder, bg="#ffa000", fg="white", font=REM_FONT)
         self.edit_btn.pack(side="left", padx=10)
 
-        self.refresh_btn = tk.Button(btn_frame, text="Refresh", command=self.refresh_list, bg="#1976d2", fg="white", font=('Arial', 11))
+        self.refresh_btn = tk.Button(btn_frame, text="Refresh", command=self.refresh_list, bg="#1976d2", fg="white", font=REM_FONT)
         self.refresh_btn.pack(side="left", padx=10)
+
+        self.notebook = notebook  # Save reference for later
+
+        def on_tab_changed(event):
+            tab = event.widget.tab(event.widget.index("current"))["text"]
+            if tab == "Upcoming Reminders":
+                self.active_tree = self.tree_upcoming
+            else:
+                self.active_tree = self.tree_status
+
+        self.active_tree = self.tree_upcoming  # Default
+        notebook.bind("<<NotebookTabChanged>>", on_tab_changed)
 
         self.refresh_list()
         self.running = True
@@ -228,11 +242,11 @@ class ReminderApp:
         self.clear_inputs()
 
     def edit_reminder(self):
-        selected = self.tree.selection()
+        selected = self.active_tree.selection()
         if not selected:
             messagebox.showwarning("No Selection", "Please select a reminder to edit.")
             return
-        idx = int(selected[0])
+        idx = int(selected[0]) - 1  # Treeview iid starts at 1
         rem = self.reminders[idx]
         # Fill the input fields with the selected reminder's data
         self.title_entry.delete(0, tk.END)
@@ -263,6 +277,7 @@ class ReminderApp:
         self.add_btn.config(text="Add Reminder", bg="#00796b")
 
     def refresh_list(self):
+        self.load_reminders()  # Always reload from file for latest sync
         # Upcoming
         for row in self.tree_upcoming.get_children():
             self.tree_upcoming.delete(row)
@@ -295,11 +310,11 @@ class ReminderApp:
                 idx_status += 1
 
     def delete_reminder(self):
-        selected = self.tree.selection()
+        selected = self.active_tree.selection()
         if not selected:
             messagebox.showwarning("No Selection", "Please select a reminder to delete.")
             return
-        idx = int(selected[0])
+        idx = int(selected[0]) - 1  # Treeview iid starts at 1
         del self.reminders[idx]
         self.save_reminders()
         self.refresh_list()
@@ -310,7 +325,6 @@ class ReminderApp:
             try:
                 with open(DATA_FILE, "r") as f:
                     loaded = json.load(f)
-                    # Only keep valid reminders and use OOP
                     self.reminders = [
                         Reminder.from_dict(rem)
                         for rem in loaded
@@ -359,4 +373,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = ReminderApp(root)
     root.mainloop()
-

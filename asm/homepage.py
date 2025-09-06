@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw, ImageOps
 from cgpa import *
+from homeworkPlanner import *
 from reminders import *
 from login import LoginWindow
 
@@ -134,7 +135,8 @@ class HomePage:
             calc_window = tk.Toplevel(self.master)
             CalculatorApp(calc_window)
         elif app_name == "Homework Planner":
-            messagebox.showinfo("Info", "Opening Homework Planner (to be implemented)")
+            planner_window = tk.Toplevel(self.master)
+            HomeworkPlanner(planner_window)
         elif app_name == "Simple Reminder":
             reminders_window = tk.Toplevel(self.master)
             ReminderApp(reminders_window)
@@ -149,5 +151,7 @@ def start_main_app():
 
 if __name__ == "__main__":
     login_root = tk.Tk()
-    LoginWindow(login_root, on_success=start_main_app)
-    login_root.mainloop()
+    LoginWindow(login_root, on_success=None)  # No callback needed
+    login_root.mainloop()  # This will block until login window is closed
+    # After login window is closed, start main app
+    start_main_app()
