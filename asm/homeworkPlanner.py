@@ -79,6 +79,20 @@ class HomeworkPlanner:
         self.status_bar.config(text=f"📅 {now}")
         self.root.after(1000, self.update_clock)
 
+    # ---------------- Task Details ----------------
+    def show_details(self, event=None):
+        sel = self.tree.selection()
+        if sel:
+            task_id = int(sel[0])
+            tasks = load_tasks_from_json()
+            row = next((t for t in tasks if t["id"] == task_id), None)
+            if row:
+                self.details_label.config(text=f"Details: {row.get('details', '—') or '—'}")
+            else:
+                self.details_label.config(text="Details: —")
+        else:
+            self.details_label.config(text="Details: —")
+
     # ---------------- Tasks Tab ----------------
     def setup_tasks_tab(self):
         filter_frame = tk.Frame(self.tab_tasks, bg="#e8eaf6", pady=15, padx=20)
@@ -119,6 +133,18 @@ class HomeworkPlanner:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=160, anchor="center")
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        self.details_label = tk.Label(
+        self.tab_tasks,
+        text="Details: —",
+        anchor="w",
+        justify="left",
+        bg="#f0f0f0",
+        font=DEFAULT_FONT,
+        wraplength=900  # wrap long text so it doesn't go off screen
+        )
+        self.tree.bind("<<TreeviewSelect>>", self.show_details)
+        self.details_label.pack(fill=tk.X, padx=10, pady=5)        
 
         btns = tk.Frame(self.tab_tasks, pady=5, bg="#ffffff")
         btns.pack()
@@ -325,6 +351,8 @@ class HomeworkPlanner:
         self.tree.tag_configure("overdue", background="#ffcdd2")
         self.tree.tag_configure("today", background="#fff9c4")
 
+
+
     def mark_done(self):
         sel = self.tree.selection()
         if not sel:
@@ -351,25 +379,34 @@ class HomeworkPlanner:
         win = tk.Toplevel(self.root)
         win.title("Edit Task")
         win.configure(bg="#ffffff")
-        win.geometry("500x450")
+        win.state("zoomed")
 
-        tk.Label(win, text="Title:", bg="#ffffff", font=BOLD_FONT).grid(row=0, column=0, pady=5, padx=5, sticky="e")
-        e_title = tk.Entry(win, width=30, font=DEFAULT_FONT)
+        # Center-top container
+        container = tk.Frame(win, bg="#ffffff")
+        container.pack(expand=True, anchor="n")  # stick to top center
+
+        form = tk.Frame(container, pady=20, padx=20, bg="#ffffff")
+        form.pack()
+
+        # Title
+        tk.Label(form, text="Title:", bg="#ffffff", font=BOLD_FONT).grid(row=0, column=0, pady=5, padx=5, sticky="e")
+        e_title = tk.Entry(form, width=40, font=DEFAULT_FONT)
         e_title.insert(0, row["title"])
         e_title.grid(row=0, column=1, pady=5, padx=5)
 
-        tk.Label(win, text="Subject:", bg="#ffffff", font=BOLD_FONT).grid(row=1, column=0, pady=5, padx=5, sticky="e")
-        e_subject = tk.Entry(win, width=30, font=DEFAULT_FONT)
+        # Subject
+        tk.Label(form, text="Subject:", bg="#ffffff", font=BOLD_FONT).grid(row=1, column=0, pady=5, padx=5, sticky="e")
+        e_subject = tk.Entry(form, width=40, font=DEFAULT_FONT)
         e_subject.insert(0, row["subject"])
         e_subject.grid(row=1, column=1, pady=5, padx=5)
 
-        tk.Label(win, text="Due Date:", bg="#ffffff", font=BOLD_FONT).grid(row=2, column=0, pady=5, padx=5, sticky="e")
-
+        # Due Date
+        tk.Label(form, text="Due Date:", bg="#ffffff", font=BOLD_FONT).grid(row=2, column=0, pady=5, padx=5, sticky="e")
         years = [str(y) for y in range(datetime.now().year, datetime.now().year + 6)]
         months = [str(m).zfill(2) for m in range(1, 13)]
         days = [str(d).zfill(2) for d in range(1, 32)]
 
-        date_frame = tk.Frame(win, bg="#ffffff")
+        date_frame = tk.Frame(form, bg="#ffffff")
         date_frame.grid(row=2, column=1, pady=5, padx=5, sticky="w")
 
         e_year = ttk.Combobox(date_frame, values=years, width=6, state="readonly", font=DEFAULT_FONT)
@@ -395,16 +432,18 @@ class HomeworkPlanner:
         e_month.pack(side=tk.LEFT, padx=2)
         e_day.pack(side=tk.LEFT, padx=2)
 
-        tk.Label(win, text="Priority:", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, pady=5, padx=5, sticky="e")
-        e_priority = tk.Entry(win, width=30, font=DEFAULT_FONT)
+        # Priority
+        tk.Label(form, text="Priority:", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, pady=5, padx=5, sticky="e")
+        e_priority = tk.Entry(form, width=40, font=DEFAULT_FONT)
         e_priority.insert(0, str(row["priority"]))
         e_priority.grid(row=3, column=1, pady=5, padx=5)
 
-        tk.Label(win, text="Details:", bg="#ffffff", font=BOLD_FONT).grid(row=4, column=0, pady=5, padx=5, sticky="ne")
-        e_details = tk.Text(win, width=30, height=5, font=DEFAULT_FONT)
+        # Details
+        tk.Label(form, text="Details:", bg="#ffffff", font=BOLD_FONT).grid(row=4, column=0, pady=5, padx=5, sticky="ne")
+        e_details = tk.Text(form, width=40, height=6, font=DEFAULT_FONT)
         e_details.insert("1.0", row["details"])
         e_details.grid(row=4, column=1, pady=5, padx=5)
-
+        
         def save():
             try:
                 due = f"{e_year.get()}-{e_month.get()}-{e_day.get()}"
@@ -421,6 +460,21 @@ class HomeworkPlanner:
             win.destroy()
             self.load_tasks()
 
+            self.conn.execute(
+                """UPDATE tasks 
+                SET title=?, subject=?, due_at=?, priority=?, details=? 
+                WHERE id=?""",
+                (e_title.get(),
+                e_subject.get(),
+                due,
+                int(e_priority.get()),
+                e_details.get("1.0", "end").strip(),
+                task_id)
+            )
+            self.conn.commit()
+            win.destroy()
+            self.load_tasks()
+
             # --- Sync reminder if exists ---
             reminders = load_reminders_from_json()
             for rem in reminders:
@@ -431,7 +485,8 @@ class HomeworkPlanner:
                     rem["status"] = "Pending"
             save_reminders_to_json(reminders)
 
-        tk.Button(win, text="Save", command=save, bg="#4caf50", fg="white", font=DEFAULT_FONT, width=15).grid(row=5, column=0, columnspan=2, pady=15)
+        tk.Button(form, text="Save", command=save, bg="#4caf50", fg="white", font=DEFAULT_FONT, width=20)\
+        .grid(row=5, column=0, columnspan=2, pady=15)
 
     def delete_task(self):
         sel = self.tree.selection()
@@ -455,4 +510,5 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
+
     main()
