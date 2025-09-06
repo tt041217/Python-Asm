@@ -12,8 +12,14 @@ def hash_password(password):
 def load_users():
     if not os.path.exists(USER_FILE):
         return []
-    with open(USER_FILE, "r") as f:
-        return json.load(f)
+    try:
+        with open(USER_FILE, "r") as f:
+            data = f.read().strip()
+            if not data:
+                return []
+            return json.loads(data)
+    except Exception:
+        return []
 
 def save_users(users):
     with open(USER_FILE, "w") as f:
@@ -49,8 +55,7 @@ class LoginWindow:
         for user in users:
             if user["id"] == user_id and user["password"] == hash_password(pw):
                 messagebox.showinfo("Success", "Login successful!")
-                self.master.destroy()
-                self.on_success()
+                self.master.destroy()  # Just close the login window
                 return
         messagebox.showerror("Error", "Invalid ID or password.")
 
