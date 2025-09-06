@@ -12,12 +12,13 @@ DATA_FILE = "reminders.json"
 REM_FONT = ('Arial', 11)  # Only used in Reminder app
 
 class Reminder:
-    def __init__(self, title, dt, note="", repeat="None", status="Pending"):
+    def __init__(self, title, dt, note="", repeat="None", status="Pending", category="Others"):
         self.title = title
         self.datetime = dt  # datetime object
         self.note = note
         self.repeat = repeat
         self.status = status  # "Pending" or "Notified"
+        self.category = category
 
     def to_dict(self):
         return {
@@ -25,7 +26,8 @@ class Reminder:
             "datetime": self.datetime.strftime("%Y-%m-%d %H:%M"),
             "repeat": self.repeat,
             "note": self.note,
-            "status": self.status
+            "status": self.status,
+            "category": self.category
         }
 
     @classmethod
@@ -33,18 +35,19 @@ class Reminder:
         dt = datetime.strptime(data["datetime"], "%Y-%m-%d %H:%M")
         repeat = data.get("repeat", "None")
         status = data.get("status", "Pending")
+        category = data.get("category", "Others")
         if repeat in ("Daily", "Weekly"):
             return RecurringReminder(
-                data["title"], dt, data.get("note", ""), repeat, status
+                data["title"], dt, data.get("note", ""), repeat, status, category
             )
         else:
             return Reminder(
-                data["title"], dt, data.get("note", ""), repeat, status
+                data["title"], dt, data.get("note", ""), repeat, status, category
             )
 
 class RecurringReminder(Reminder):
-    def __init__(self, title, dt, note="", repeat="None", status="Pending"):
-        super().__init__(title, dt, note, repeat, status)
+    def __init__(self, title, dt, note="", repeat="None", status="Pending", category="Others"):
+        super().__init__(title, dt, note, repeat, status, category)
     def next_occurrence(self):
         if self.repeat == "Daily":
             return self.datetime + timedelta(days=1)
@@ -56,7 +59,7 @@ class ReminderApp:
     def __init__(self, master):
         self.master = master
         master.title("Simple Reminder")
-        master.geometry("400x500")
+        master.geometry("500x520")
         master.configure(bg="#f7f7f7")
 
         self.reminders = []
@@ -118,14 +121,20 @@ class ReminderApp:
         self.repeat_menu = ttk.Combobox(input_frame, textvariable=self.repeat_var, values=repeat_options, state="readonly", font=REM_FONT)
         self.repeat_menu.grid(row=3, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
 
-        tk.Label(input_frame, text="Note (optional):", bg="#e0f7fa", font=REM_FONT).grid(row=4, column=0, sticky="nw", padx=5, pady=5)
+        tk.Label(input_frame, text="Category:", bg="#e0f7fa", font=REM_FONT).grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        self.category_var = tk.StringVar(value="Others")
+        category_options = ["Class", "Tasks", "Appointment", "Important Event", "Others"]
+        self.category_menu = ttk.Combobox(input_frame, textvariable=self.category_var, values=category_options, state="readonly", font=REM_FONT)
+        self.category_menu.grid(row=4, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
+
+        tk.Label(input_frame, text="Note (optional):", bg="#e0f7fa", font=REM_FONT).grid(row=5, column=0, sticky="nw", padx=5, pady=5)
         self.note_text = tk.Text(input_frame, height=3, font=REM_FONT)
-        self.note_text.grid(row=4, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
+        self.note_text.grid(row=5, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
 
         input_frame.columnconfigure(1, weight=1)
 
         self.add_btn = tk.Button(input_frame, text="Add Reminder", command=self.add_reminder, bg="#00796b", fg="white", font=REM_FONT)
-        self.add_btn.grid(row=5, column=0, columnspan=4, pady=10)
+        self.add_btn.grid(row=6, column=0, columnspan=4, pady=10)
 
         # --- Reminders List ---
         notebook = ttk.Notebook(master)
@@ -137,11 +146,11 @@ class ReminderApp:
 
         self.tree_upcoming = ttk.Treeview(
             upcoming_frame,
-            columns=("No", "Title", "DateTime", "Repeat", "Note"),
+            columns=("No", "Title", "Category", "DateTime", "Repeat", "Note"),
             show="headings",
             height=8
         )
-        for col in ("No", "Title", "DateTime", "Repeat", "Note"):
+        for col in ("No", "Title", "Category", "DateTime", "Repeat", "Note"):
             self.tree_upcoming.heading(col, text=col)
             self.tree_upcoming.column(col, anchor="center")
         self.tree_upcoming.pack(fill="both", expand=True, padx=5, pady=5)
@@ -152,11 +161,11 @@ class ReminderApp:
 
         self.tree_status = ttk.Treeview(
             status_frame,
-            columns=("No", "Title", "DateTime", "Repeat", "Note", "Status"),
+            columns=("No", "Title", "Category", "DateTime", "Repeat", "Note", "Status"),
             show="headings",
             height=8
         )
-        for col in ("No", "Title", "DateTime", "Repeat", "Note", "Status"):
+        for col in ("No", "Title", "Category", "DateTime", "Repeat", "Note", "Status"):
             self.tree_status.heading(col, text=col)
             self.tree_status.column(col, anchor="center")
         self.tree_status.pack(fill="both", expand=True, padx=5, pady=5)
@@ -200,6 +209,7 @@ class ReminderApp:
         ampm = self.ampm_var.get()
         repeat = self.repeat_var.get()
         note = self.note_text.get("1.0", tk.END).strip()
+        category = self.category_var.get()
 
         # Convert to 24-hour format
         if ampm == "PM" and hour != 12:
@@ -222,9 +232,9 @@ class ReminderApp:
 
         # Use OOP classes
         if repeat in ("Daily", "Weekly"):
-            reminder = RecurringReminder(title, dt, note, repeat)
+            reminder = RecurringReminder(title, dt, note, repeat, category=category)
         else:
-            reminder = Reminder(title, dt, note, repeat)
+            reminder = Reminder(title, dt, note, repeat, category=category)
 
         if self.editing_index is not None:
             # Update existing reminder
@@ -262,6 +272,7 @@ class ReminderApp:
         self.repeat_var.set(rem.repeat)
         self.note_text.delete("1.0", tk.END)
         self.note_text.insert("1.0", rem.note)
+        self.category_var.set(getattr(rem, "category", "Others"))
         self.editing_index = idx
         self.add_btn.config(text="Update Reminder", bg="#388e3c")
 
@@ -273,6 +284,7 @@ class ReminderApp:
         self.ampm_var.set("AM")
         self.repeat_var.set("None")
         self.note_text.delete("1.0", tk.END)
+        self.category_var.set("Others")
         self.editing_index = None
         self.add_btn.config(text="Add Reminder", bg="#00796b")
 
@@ -294,18 +306,19 @@ class ReminderApp:
             dt_str = rem.datetime.strftime("%Y-%m-%d %I:%M %p")
             repeat = rem.repeat
             note = rem.note
+            category = getattr(rem, "category", "Others")
             display_note = (note[:40] + "...") if len(note) > 43 else note
 
             if rem.status == "Pending" and rem.datetime >= now:
                 self.tree_upcoming.insert(
                     "", "end", iid=idx_upcoming,
-                    values=(idx_upcoming, rem.title, dt_str, repeat, display_note)
+                    values=(idx_upcoming, rem.title, category, dt_str, repeat, display_note)
                 )
                 idx_upcoming += 1
             else:
                 self.tree_status.insert(
                     "", "end", iid=idx_status,
-                    values=(idx_status, rem.title, dt_str, repeat, display_note, rem.status)
+                    values=(idx_status, rem.title, category, dt_str, repeat, display_note, rem.status)
                 )
                 idx_status += 1
 
