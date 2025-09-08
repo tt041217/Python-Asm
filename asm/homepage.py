@@ -5,13 +5,14 @@ from cgpa import *
 from homeworkPlanner import *
 from reminders import *
 from login import LoginWindow
+from time import strftime
+
 
 class HomePage:
     def __init__(self, master):
         self.master = master
         master.title("Application Home Page")
-        master.state("zoomed")  # ✅ start fullscreen (Windows)
-        # master.attributes("-fullscreen", True)  # ✅ alternative fullscreen
+        master.state("zoomed")  # start fullscreen (Windows)
 
         # Create gradient background (initial size, will update on resize)
         self.bg_image = self.create_gradient(master.winfo_screenwidth(),
@@ -25,12 +26,24 @@ class HomePage:
         # Update background when window resizes
         master.bind("<Configure>", self.resize_background)
 
-        # Header
-        self.header = tk.Label(master, text="✨ Welcome to My Application Suite ✨", 
-                              font=('Helvetica', 26, 'bold'), bg="#3f6e9d", fg="white")
-        self.header.pack(pady=30)
-        
-        # Button frame
+        # Header (like a navbar)
+        self.header = tk.Label(master, text="✨ Welcome to My Application Suite ✨",
+                               font=('Helvetica', 28, 'bold'),
+                               bg="#2d3436", fg="white", pady=15)
+        self.header.pack(fill="x")
+
+        # Clock
+        self.clock_label = tk.Label(master, font=('Helvetica', 56, 'bold'),
+                                    bg="#74b9ff", fg="white")
+        self.clock_label.pack(pady=(30, 5))
+
+        # Date
+        self.date_label = tk.Label(master, font=('Helvetica', 20),
+                                   bg="#74b9ff", fg="#dfe6e9")
+        self.date_label.pack(pady=(0, 30))
+        self.update_time()
+
+        # Button frame (cards container)
         self.button_frame = tk.Frame(master, bg="#74b9ff")
         self.button_frame.pack(expand=True)
 
@@ -40,9 +53,18 @@ class HomePage:
         self.create_app_card("reminder.png", "Simple Reminder", 0, 2)
 
         # Footer
-        self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨", 
-                             font=('Arial', 20), bg="#3f6e9d", fg="white")
-        self.footer.pack(side='bottom', pady=15)
+        self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨",
+                               font=('Arial', 16),
+                               bg="#2d3436", fg="white", pady=8)
+        self.footer.pack(side='bottom', fill="x")
+
+    # Clock update function
+    def update_time(self):
+        current_time = strftime('%I:%M:%S %p')
+        self.clock_label.config(text=current_time)
+        current_date = strftime('%A, %B %d, %Y')
+        self.date_label.config(text=current_date)
+        self.clock_label.after(1000, self.update_time)
 
     def resize_background(self, event):
         """Resize background dynamically when window size changes"""
@@ -54,17 +76,18 @@ class HomePage:
 
     def create_app_card(self, image_file, text, row, col):
         card = tk.Frame(self.button_frame, bg="white", bd=0, relief="flat")
-        card.grid(row=row, column=col, padx=30, pady=10, ipadx=10, ipady=10)
+        card.grid(row=row, column=col, padx=50, pady=20, ipadx=15, ipady=15)
 
-        # Add shadow effect
-        card.config(highlightbackground="#b2bec3", highlightthickness=4)
+        # Shadow effect
+        card.config(highlightbackground="#dfe6e9", highlightthickness=3)
 
+        # Load image or placeholder
         if self.image_exists(image_file):
             img = Image.open(image_file).resize((180, 180), Image.LANCZOS)
         else:
             img = self.create_default_image(text)
 
-        # Add rounded corners to image
+        # Rounded corners
         img = img.convert("RGBA")
         radius = 30
         circle = Image.new('L', (radius * 2, radius * 2), 0)
@@ -85,15 +108,19 @@ class HomePage:
         btn.image = photo
         btn.pack(pady=10)
 
-        label = tk.Label(card, text=text, font=('Helvetica', 14, 'bold'), bg="white", fg="#343a40")
+        label = tk.Label(card, text=text, font=('Helvetica', 14, 'bold'),
+                         bg="white", fg="#343a40")
         label.pack()
 
+        # Click bindings
         btn.bind("<Button-1>", lambda e: self.open_application(text))
         label.bind("<Button-1>", lambda e: self.open_application(text))
 
+        # Hover effects
         def on_enter(e):
-            card.config(bg="#f1f3f5")
-            label.config(fg="#007bff")
+            card.config(bg="#f8f9fa")
+            label.config(fg="#0984e3")
+
         def on_leave(e):
             card.config(bg="white")
             label.config(fg="#343a40")
@@ -127,7 +154,7 @@ class HomePage:
     def create_default_image(self, text):
         img = Image.new('RGB', (180, 180), color='#dee2e6')
         draw = ImageDraw.Draw(img)
-        draw.text((20, 80), text[:5], fill='black')
+        draw.text((40, 80), text[:4], fill='black')
         return img
 
     def open_application(self, app_name):
@@ -149,9 +176,9 @@ def start_main_app():
     app = HomePage(root)
     root.mainloop()
 
+
 if __name__ == "__main__":
     login_root = tk.Tk()
     LoginWindow(login_root, on_success=None)  # No callback needed
-    login_root.mainloop()  # This will block until login window is closed
-    # After login window is closed, start main app
+    login_root.mainloop()  # Wait until login window closes
     start_main_app()
