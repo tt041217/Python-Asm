@@ -8,16 +8,17 @@ from datetime import datetime, timedelta
 from tkcalendar import DateEntry
 
 DATA_FILE = "reminders.json"
+HOMEWORK_FILE = "homeworkPlanner.json"
 
-REM_FONT = ('Arial', 11)  # Only used in Reminder app
+REM_FONT = ('Arial', 11)
 
 class Reminder:
     def __init__(self, title, dt, note="", repeat="None", status="Pending", category="Others"):
         self.title = title
-        self.datetime = dt  # datetime object
+        self.datetime = dt
         self.note = note
         self.repeat = repeat
-        self.status = status  # "Pending" or "Notified"
+        self.status = status
         self.category = category
 
     def to_dict(self):
@@ -59,14 +60,13 @@ class ReminderApp:
     def __init__(self, master):
         self.master = master
         master.title("Simple Reminder")
-        master.geometry("500x520")
+        master.state('zoomed')  # Make window full screen on Windows
         master.configure(bg="#f7f7f7")
 
         self.reminders = []
         self.load_reminders()
-        self.editing_index = None  # Track which reminder is being edited
+        self.editing_index = None
 
-        # --- Input Frame ---
         input_frame = tk.LabelFrame(master, text="Set a Reminder", bg="#e0f7fa", font=('Arial', 12, 'bold'))
         input_frame.pack(padx=15, pady=15, fill="x")
 
@@ -74,40 +74,31 @@ class ReminderApp:
         self.title_entry = tk.Entry(input_frame, font=REM_FONT)
         self.title_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
 
-        tk.Label(input_frame, text="Date:", bg="#e0f7fa", font=REM_FONT).grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        self.date_entry = DateEntry(
-            input_frame, font=REM_FONT, date_pattern='yyyy-mm-dd',
-            showweeknumbers=False, foreground='gray'
+        tk.Label(input_frame, text="Date:", bg="#e0f7fa", font=REM_FONT).grid(
+            row=1, column=0, sticky="w", padx=5, pady=(2, 2)
         )
-        self.date_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew", columnspan=3)
-
-        # Simulate blank/placeholder by clearing the entry and setting gray text
-        self.date_entry.delete(0, 'end')
-        self.date_entry.configure(foreground='gray')
-
-        def on_focus_in(event):
-            if self.date_entry.get() == '':
-                self.date_entry.configure(foreground='black')
-        def on_focus_out(event):
-            if self.date_entry.get() == '':
-                self.date_entry.configure(foreground='gray')
-        self.date_entry.bind("<FocusIn>", on_focus_in)
-        self.date_entry.bind("<FocusOut>", on_focus_out)
-        self.date_entry.configure(foreground='gray')
+        self.date_entry = DateEntry(
+            input_frame,
+            font=REM_FONT,
+            date_pattern='yyyy-mm-dd',
+            showweeknumbers=False,
+            state="readonly",
+            width=12
+        )
+        self.date_entry.grid(row=1, column=1, padx=5, pady=(2, 2), sticky="w")
+        def open_calendar(event):
+            self.date_entry.event_generate('<Down>')
+        self.date_entry.bind('<Button-1>', open_calendar)
 
         tk.Label(input_frame, text="Time:", bg="#e0f7fa", font=REM_FONT).grid(row=2, column=0, sticky="w", padx=5, pady=5)
-
-        # Create a frame for time selection to avoid grid gaps
         time_frame = tk.Frame(input_frame, bg="#e0f7fa")
-        time_frame.grid(row=2, column=1, padx=0, pady=5, sticky="w", columnspan=3)
-
+        time_frame.grid(row=2, column=1, padx=5, pady=5, sticky="w", columnspan=3)
         self.hour_var = tk.StringVar(value="12")
         self.minute_var = tk.StringVar(value="00")
         self.ampm_var = tk.StringVar(value="AM")
         hours = [f"{h:02d}" for h in range(1, 13)]
         minutes = [f"{m:02d}" for m in range(0, 60)]
         ampm = ["AM", "PM"]
-
         self.hour_menu = ttk.Combobox(time_frame, textvariable=self.hour_var, values=hours, width=2, state="readonly", font=REM_FONT)
         self.hour_menu.pack(side="left", padx=(0,2))
         self.minute_menu = ttk.Combobox(time_frame, textvariable=self.minute_var, values=minutes, width=2, state="readonly", font=REM_FONT)
@@ -137,62 +128,30 @@ class ReminderApp:
         self.add_btn.grid(row=6, column=0, columnspan=4, pady=10)
 
         # --- Reminders List ---
-        notebook = ttk.Notebook(master)
-        notebook.pack(padx=15, pady=(0, 15), fill="both", expand=True)
-
-        # Upcoming Reminders Tab
-        upcoming_frame = tk.Frame(notebook, bg="#e0f7fa")
-        notebook.add(upcoming_frame, text="Upcoming Reminders")
+        upcoming_frame = tk.Frame(master, bg="#e0f7fa")
+        upcoming_frame.pack(padx=15, pady=(0, 15), fill="both", expand=True)
 
         self.tree_upcoming = ttk.Treeview(
             upcoming_frame,
             columns=("No", "Title", "Category", "DateTime", "Repeat", "Note"),
             show="headings",
-            height=8
+            height=15
         )
         for col in ("No", "Title", "Category", "DateTime", "Repeat", "Note"):
             self.tree_upcoming.heading(col, text=col)
             self.tree_upcoming.column(col, anchor="center")
         self.tree_upcoming.pack(fill="both", expand=True, padx=5, pady=5)
 
-        # Status Tab
-        status_frame = tk.Frame(notebook, bg="#e0f7fa")
-        notebook.add(status_frame, text="Status")
-
-        self.tree_status = ttk.Treeview(
-            status_frame,
-            columns=("No", "Title", "Category", "DateTime", "Repeat", "Note", "Status"),
-            show="headings",
-            height=8
-        )
-        for col in ("No", "Title", "Category", "DateTime", "Repeat", "Note", "Status"):
-            self.tree_status.heading(col, text=col)
-            self.tree_status.column(col, anchor="center")
-        self.tree_status.pack(fill="both", expand=True, padx=5, pady=5)
-
-        # Buttons for delete and edit
         btn_frame = tk.Frame(master, bg="#f7f7f7")
         btn_frame.pack(pady=5)
         self.del_btn = tk.Button(btn_frame, text="Delete Selected", command=self.delete_reminder, bg="#d32f2f", fg="white", font=REM_FONT)
         self.del_btn.pack(side="left", padx=10)
-
         self.edit_btn = tk.Button(btn_frame, text="Edit Selected", command=self.edit_reminder, bg="#ffa000", fg="white", font=REM_FONT)
         self.edit_btn.pack(side="left", padx=10)
-
         self.refresh_btn = tk.Button(btn_frame, text="Refresh", command=self.refresh_list, bg="#1976d2", fg="white", font=REM_FONT)
         self.refresh_btn.pack(side="left", padx=10)
 
-        self.notebook = notebook  # Save reference for later
-
-        def on_tab_changed(event):
-            tab = event.widget.tab(event.widget.index("current"))["text"]
-            if tab == "Upcoming Reminders":
-                self.active_tree = self.tree_upcoming
-            else:
-                self.active_tree = self.tree_status
-
-        self.active_tree = self.tree_upcoming  # Default
-        notebook.bind("<<NotebookTabChanged>>", on_tab_changed)
+        self.active_tree = self.tree_upcoming
 
         self.refresh_list()
         self.running = True
@@ -200,6 +159,7 @@ class ReminderApp:
         self.check_thread.start()
 
         master.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.date_entry.set_date(datetime.now())
 
     def add_reminder(self):
         title = self.title_entry.get().strip()
@@ -210,8 +170,6 @@ class ReminderApp:
         repeat = self.repeat_var.get()
         note = self.note_text.get("1.0", tk.END).strip()
         category = self.category_var.get()
-
-        # Convert to 24-hour format
         if ampm == "PM" and hour != 12:
             hour += 12
         if ampm == "AM" and hour == 12:
@@ -230,20 +188,17 @@ class ReminderApp:
             messagebox.showwarning("Input Error", "Invalid date or time format.")
             return
 
-        # Use OOP classes
         if repeat in ("Daily", "Weekly"):
             reminder = RecurringReminder(title, dt, note, repeat, category=category)
         else:
             reminder = Reminder(title, dt, note, repeat, category=category)
 
         if self.editing_index is not None:
-            # Update existing reminder
             self.reminders[self.editing_index] = reminder
             self.editing_index = None
             self.add_btn.config(text="Add Reminder", bg="#00796b")
             messagebox.showinfo("Reminder Updated", "Your reminder has been updated.")
         else:
-            # Add new reminder
             self.reminders.append(reminder)
             messagebox.showinfo("Reminder Added", "Your reminder has been added.")
 
@@ -256,13 +211,12 @@ class ReminderApp:
         if not selected:
             messagebox.showwarning("No Selection", "Please select a reminder to edit.")
             return
-        idx = int(selected[0]) - 1  # Treeview iid starts at 1
+        idx = int(selected[0]) - 1
         rem = self.reminders[idx]
-        # Fill the input fields with the selected reminder's data
         self.title_entry.delete(0, tk.END)
         self.title_entry.insert(0, rem.title)
         dt = rem.datetime
-        self.date_entry.set_date(dt)
+        self.date_entry.set_date(dt.date())
         hour = dt.strftime("%I")
         minute = dt.strftime("%M")
         ampm = dt.strftime("%p")
@@ -289,17 +243,11 @@ class ReminderApp:
         self.add_btn.config(text="Add Reminder", bg="#00796b")
 
     def refresh_list(self):
-        self.load_reminders()  # Always reload from file for latest sync
-        # Upcoming
+        self.load_reminders()
         for row in self.tree_upcoming.get_children():
             self.tree_upcoming.delete(row)
-        # Status
-        for row in self.tree_status.get_children():
-            self.tree_status.delete(row)
-
         now = datetime.now()
         idx_upcoming = 1
-        idx_status = 1
         for rem in self.reminders:
             if not hasattr(rem, "title") or not hasattr(rem, "datetime") or not hasattr(rem, "repeat"):
                 continue
@@ -308,43 +256,50 @@ class ReminderApp:
             note = rem.note
             category = getattr(rem, "category", "Others")
             display_note = (note[:40] + "...") if len(note) > 43 else note
-
-            if rem.status == "Pending" and rem.datetime >= now:
-                self.tree_upcoming.insert(
-                    "", "end", iid=idx_upcoming,
-                    values=(idx_upcoming, rem.title, category, dt_str, repeat, display_note)
-                )
-                idx_upcoming += 1
-            else:
-                self.tree_status.insert(
-                    "", "end", iid=idx_status,
-                    values=(idx_status, rem.title, category, dt_str, repeat, display_note, rem.status)
-                )
-                idx_status += 1
+            self.tree_upcoming.insert(
+                "", "end", iid=idx_upcoming,
+                values=(idx_upcoming, rem.title, category, dt_str, repeat, display_note)
+            )
+            idx_upcoming += 1
 
     def delete_reminder(self):
         selected = self.active_tree.selection()
         if not selected:
             messagebox.showwarning("No Selection", "Please select a reminder to delete.")
             return
-        idx = int(selected[0]) - 1  # Treeview iid starts at 1
+        idx = int(selected[0]) - 1
         del self.reminders[idx]
         self.save_reminders()
         self.refresh_list()
         messagebox.showinfo("Deleted", "Reminder deleted.")
 
     def load_reminders(self):
+        reminders = []
+        # Load from reminders.json
         if os.path.exists(DATA_FILE):
             try:
                 with open(DATA_FILE, "r") as f:
                     loaded = json.load(f)
-                    self.reminders = [
+                    reminders.extend([
                         Reminder.from_dict(rem)
                         for rem in loaded
                         if all(k in rem for k in ("title", "datetime", "repeat"))
-                    ]
+                    ])
             except Exception:
-                self.reminders = []
+                pass
+        # Load from homeworkPlanner.json
+        if os.path.exists(HOMEWORK_FILE):
+            try:
+                with open(HOMEWORK_FILE, "r") as f:
+                    loaded = json.load(f)
+                    reminders.extend([
+                        Reminder.from_dict(rem)
+                        for rem in loaded
+                        if all(k in rem for k in ("title", "datetime", "repeat"))
+                    ])
+            except Exception:
+                pass
+        self.reminders = reminders
 
     def save_reminders(self):
         try:
@@ -356,26 +311,29 @@ class ReminderApp:
     def check_reminders(self):
         while self.running:
             now = datetime.now().replace(second=0, microsecond=0)
-            for rem in self.reminders:
+            for idx, rem in list(enumerate(self.reminders)):
                 if rem.status == "Pending" and rem.datetime == now:
-                    self.show_notification(rem)
-                    rem.status = "Notified"
-                    # Handle repeat using OOP
-                    if isinstance(rem, RecurringReminder):
-                        next_dt = rem.next_occurrence()
-                        if next_dt:
-                            rem.datetime = next_dt
-                            rem.status = "Pending"
-                    self.save_reminders()
-                    self.refresh_list()
-            time.sleep(30)  # Check every 30 seconds
+                    self.show_notification(rem, idx)
+            time.sleep(30)
 
-    def show_notification(self, rem):
-        def popup():
+    def show_notification(self, rem, idx):
+        def popup_and_delete():
             note = rem.note
             msg = f"{rem.title}\n\n{note}" if note else rem.title
             messagebox.showinfo("Reminder!", msg)
-        self.master.after(0, popup)
+            # Handle recurring reminders
+            if isinstance(rem, RecurringReminder):
+                next_dt = rem.next_occurrence()
+                if next_dt:
+                    rem.datetime = next_dt
+                    rem.status = "Pending"
+                else:
+                    del self.reminders[idx]
+            else:
+                del self.reminders[idx]
+            self.save_reminders()
+            self.refresh_list()
+        self.master.after(0, popup_and_delete)
 
     def on_close(self):
         self.running = False
