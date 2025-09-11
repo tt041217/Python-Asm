@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
+import tkinter.simpledialog as simpledialog
 import json
 import os
 
@@ -14,39 +15,34 @@ TITLE_FONT = ("Arial", 16, "bold")
 SMALL_FONT = ("Arial", 12)
 
 # ---------- JSON Helpers ----------
-def load_tasks_from_json():
-    if not os.path.exists(DATA_FILE):
+def load_json(file_path):
+    if not os.path.exists(file_path):
         return []
     try:
-        with open(DATA_FILE, "r") as f:
+        with open(file_path, "r") as f:
             data = f.read().strip()
             if not data:
                 return []
             return json.loads(data)
     except Exception:
         return []
+
+def save_json(file_path, data):
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+def load_tasks_from_json():
+    return load_json(DATA_FILE)
 
 def save_tasks_to_json(tasks):
-    with open(DATA_FILE, "w") as f:
-        json.dump(tasks, f, indent=2)
+    save_json(DATA_FILE, tasks)
 
 def load_reminders_from_json():
-    if not os.path.exists(REMINDER_FILE):
-        return []
-    try:
-        with open(REMINDER_FILE, "r") as f:
-            data = f.read().strip()
-            if not data:
-                return []
-            return json.loads(data)
-    except Exception:
-        return []
+    return load_json(REMINDER_FILE)
 
 def save_reminders_to_json(reminders):
-    with open(REMINDER_FILE, "w") as f:
-        json.dump(reminders, f, indent=2)
+    save_json(REMINDER_FILE, reminders)
 
-# ---------------- Homework Planner ----------------
 class HomeworkPlanner:
     def __init__(self, root):
         self.root = root
@@ -54,12 +50,15 @@ class HomeworkPlanner:
         self.root.configure(bg="#f4f4f9")
         self.root.state("zoomed")
 
-        # Main Notebook
         notebook = ttk.Notebook(root)
         notebook.pack(fill=tk.BOTH, expand=True)
 
         self.tab_tasks = tk.Frame(notebook, bg="#ffffff")
         self.tab_add = tk.Frame(notebook, bg="#ffffff")
+
+        style = ttk.Style()
+        style.configure("Big.TButton", font=BOLD_FONT, padding=[20, 10])
+        style.configure("TNotebook.Tab", font=TITLE_FONT, padding=[20, 10])
 
         notebook.add(self.tab_tasks, text="📋 All Tasks")
         notebook.add(self.tab_add, text="➕ Add Task")
@@ -68,18 +67,15 @@ class HomeworkPlanner:
         self.setup_add_tab()
         self.load_tasks()
 
-        # Status bar with clock
         self.status_bar = tk.Label(root, text="Ready", anchor="w", bg="#333", fg="white", font=SMALL_FONT)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         self.update_clock()
 
-    # ---------------- Clock ----------------
     def update_clock(self):
         now = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
         self.clock_label.config(text=now)
         self.root.after(1000, self.update_clock)
-        
-    # ---------------- Task Details ----------------
+
     def show_task_details(self, event=None):
         sel = self.tree.selection()
         if not sel:
@@ -90,16 +86,13 @@ class HomeworkPlanner:
         if not task:
             return
 
-        # Create a new popup window
         details_win = tk.Toplevel(self.root)
         details_win.title("Task Details")
         details_win.geometry("400x300")
         details_win.configure(bg="#f9f9f9")
 
-        # Title
         tk.Label(details_win, text="Task Details", font=BOLD_FONT, bg="#f9f9f9").pack(pady=10)
 
-        # Frame with scrollbar
         frame = tk.Frame(details_win, bg="#f9f9f9")
         frame.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -110,7 +103,6 @@ class HomeworkPlanner:
         text.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Insert task details
         details = (
             f"Title: {task['title']}\n"
             f"Subject: {task['subject']}\n"
@@ -120,25 +112,17 @@ class HomeworkPlanner:
             f"Details:\n{task.get('details', '—')}"
         )
         text.insert("1.0", details)
-        text.config(state="disabled")  # make read-only
+        text.config(state="disabled")
 
-    # ---------------- Tasks Tab ----------------
     def setup_tasks_tab(self):
-        # Filters frame
         filter_frame = tk.Frame(self.tab_tasks, bg="#e8eaf6")
         filter_frame.pack(fill="x", padx=10, pady=5)
 
-        # Add clock (column 2, but expand to far right)
         self.clock_label = tk.Label(
-            filter_frame,
-            text="",
-            bg="#e8eaf6",
-            font=("Arial", 30),   
-            fg="#333"                     
+            filter_frame, text="", bg="#e8eaf6", font=("Arial", 30), fg="#333"
         )
         self.clock_label.grid(row=0, column=2, padx=20, sticky="e")
 
-        # Force column 1 to expand and push clock to the right
         filter_frame.grid_columnconfigure(1, weight=1)
         tk.Label(filter_frame, text="Filter by Status:", bg="#e8eaf6", font=DEFAULT_FONT)\
             .grid(row=0, column=0, sticky="w", padx=5, pady=10)
@@ -158,7 +142,7 @@ class HomeworkPlanner:
         self.search_entry.grid(row=2, column=1, sticky="w", padx=10, pady=10)
 
         tk.Button(filter_frame, text="Apply", bg="#4caf50", fg="white", font=DEFAULT_FONT,
-                command=self.load_tasks)\
+                  command=self.load_tasks)\
             .grid(row=3, column=0, columnspan=1, pady=20)
 
         style = ttk.Style()
@@ -176,16 +160,23 @@ class HomeworkPlanner:
             self.tree.column(col, width=160, anchor="center")
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        self.tree.bind("<Double-1>", self.show_task_details)       
+        self.tree.bind("<Double-1>", self.show_task_details)
 
-        btns = tk.Frame(self.tab_tasks, pady=5, bg="#ffffff")
-        btns.pack()
+        btn_frame = tk.Frame(self.tab_tasks, bg="white")
+        btn_frame.pack(fill="x", pady=10)
 
-        tk.Button(btns, text="Mark Done", command=self.mark_done, bg="#4caf50", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
-        tk.Button(btns, text="Edit Task", command=self.edit_task, bg="#2196f3", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
-        tk.Button(btns, text="Delete Task", command=self.delete_task, bg="#f44336", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
+        done_btn = ttk.Button(btn_frame, text="Mark as Done", style="Big.TButton", command=self.mark_done)
+        edit_btn = ttk.Button(btn_frame, text="Edit Task", style="Big.TButton", command=self.edit_task)
+        delete_btn = ttk.Button(btn_frame, text="Delete Task", style="Big.TButton", command=self.delete_task)
 
-    # ---------------- Add Tab ----------------
+        btn_frame.columnconfigure(0, weight=1)
+        btn_frame.columnconfigure(1, weight=1)
+        btn_frame.columnconfigure(2, weight=1)
+
+        done_btn.grid(row=0, column=0, padx=20, pady=5)
+        edit_btn.grid(row=0, column=1, padx=20, pady=5)
+        delete_btn.grid(row=0, column=2, padx=20, pady=5)
+
     def setup_add_tab(self):
         form = tk.Frame(self.tab_add, pady=15, bg="#ffffff")
         form.pack()
@@ -193,7 +184,7 @@ class HomeworkPlanner:
         tk.Label(form, text="Title:", bg="#ffffff", font=BOLD_FONT).grid(row=0, column=0, sticky="e", pady=5, padx=5)
         tk.Label(form, text="Subject:", bg="#ffffff", font=BOLD_FONT).grid(row=1, column=0, sticky="e", pady=5, padx=5)
         tk.Label(form, text="Due Date:", bg="#ffffff", font=BOLD_FONT).grid(row=2, column=0, sticky="e", pady=5, padx=5)
-        tk.Label(form, text="Priority (1-5):", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, sticky="e", pady=5, padx=5)
+        tk.Label(form, text="Priority:", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, sticky="e", pady=5, padx=5)
         tk.Label(form, text="Details:", bg="#ffffff", font=BOLD_FONT).grid(row=4, column=0, sticky="ne", pady=5, padx=5)
 
         self.title_entry = tk.Entry(form, width=40, font=DEFAULT_FONT)
@@ -221,9 +212,20 @@ class HomeworkPlanner:
         self.day_box.set(str(datetime.now().day).zfill(2))
         self.day_box.pack(side=tk.LEFT, padx=2)
 
-        self.priority_entry = tk.Entry(form, width=40, font=DEFAULT_FONT)
-        self.priority_entry.insert(0, "3")
-        self.priority_entry.grid(row=3, column=1, pady=5, padx=5)
+        self.priority_box = ttk.Combobox(form, values=["1", "2", "3", "4", "5", "Custom"],
+                                         state="readonly", font=DEFAULT_FONT, width=10)
+        self.priority_box.set("3")
+        self.priority_box.grid(row=3, column=1, sticky="w", pady=5, padx=5)
+
+        def check_priority(event):
+            if self.priority_box.get() == "Custom":
+                val = simpledialog.askinteger("Custom Priority", "Enter a priority number (6 or higher):")
+                if val and val > 5:
+                    self.priority_box.set(str(val))
+                else:
+                    messagebox.showwarning("Invalid", "Please enter a number greater than 5.")
+                    self.priority_box.set("3")
+        self.priority_box.bind("<<ComboboxSelected>>", check_priority)
 
         self.details_entry = tk.Text(form, width=40, height=6, font=DEFAULT_FONT)
         self.details_entry.grid(row=4, column=1, pady=5, padx=5)
@@ -233,7 +235,6 @@ class HomeworkPlanner:
             bg="#673ab7", fg="white", font=DEFAULT_FONT, width=20
         ).grid(row=5, column=0, columnspan=2, pady=15)
 
-    # ---------------- JSON Actions ----------------
     def add_task(self):
         title = self.title_entry.get().strip()
         if not title:
@@ -242,13 +243,18 @@ class HomeworkPlanner:
         subject = self.subject_entry.get().strip()
         try:
             due = f"{self.year_box.get()}-{self.month_box.get()}-{self.day_box.get()}"
-            datetime.strptime(due, "%Y-%m-%d")
+            due_date = datetime.strptime(due, "%Y-%m-%d")
+            if due_date.date() < datetime.today().date():
+                messagebox.showwarning("Invalid Date", "Due date cannot be in the past!")
+                return
         except:
-            due = None
+            messagebox.showwarning("Format Error", "Please select a valid due date.")
+            return
         try:
-            priority = int(self.priority_entry.get())
+            priority = int(self.priority_box.get())
         except:
             priority = 3
+
         details = self.details_entry.get("1.0", "end").strip()
 
         tasks = load_tasks_from_json()
@@ -269,7 +275,6 @@ class HomeworkPlanner:
         self.clear_add_form()
         self.load_tasks()
 
-        # --- Prompt to add reminder ---
         if messagebox.askyesno("Add Reminder", "Do you want to add a reminder for this task?"):
             self.add_reminder_from_task(new_task)
 
@@ -305,16 +310,15 @@ class HomeworkPlanner:
             time_str = time_var.get().strip()
             note = note_text.get("1.0", tk.END).strip()
             if not title or not date_str or not time_str:
-                tk.messagebox.showwarning("Missing", "Please fill in all fields.")
+                messagebox.showwarning("Missing", "Please fill in all fields.")
                 return
             try:
                 dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
             except Exception:
-                tk.messagebox.showwarning("Format", "Invalid date or time format.")
+                messagebox.showwarning("Format", "Invalid date or time format.")
                 return
 
             reminders = load_reminders_from_json()
-            # Remove any existing reminder for this task_id
             reminders = [r for r in reminders if r.get("task_id") != task["id"]]
             reminder = {
                 "task_id": task["id"],
@@ -326,7 +330,7 @@ class HomeworkPlanner:
             }
             reminders.append(reminder)
             save_reminders_to_json(reminders)
-            tk.messagebox.showinfo("Success", "Reminder added and synced!")
+            messagebox.showinfo("Success", "Reminder added and synced!")
             win.destroy()
 
         tk.Button(win, text="Confirm & Add Reminder", command=confirm, bg="#388e3c", fg="white", font=DEFAULT_FONT).pack(pady=15)
@@ -335,8 +339,7 @@ class HomeworkPlanner:
     def clear_add_form(self):
         self.title_entry.delete(0, tk.END)
         self.subject_entry.delete(0, tk.END)
-        self.priority_entry.delete(0, tk.END)
-        self.priority_entry.insert(0, "3")
+        self.priority_box.set("3")
         self.details_entry.delete("1.0", tk.END)
 
     def load_tasks(self):
@@ -345,7 +348,7 @@ class HomeworkPlanner:
         tasks = load_tasks_from_json()
         tasks.sort(key=lambda x: x.get("due_at") or "")
 
-        subjects = {"all"}
+        subjects = {"All"}
         for r in tasks:
             if r.get("subject"):
                 subjects.add(r["subject"])
@@ -356,9 +359,9 @@ class HomeworkPlanner:
         search_q = self.search_entry.get().strip().lower()
 
         for r in tasks:
-            if status_f != "all" and r["status"] != status_f:
+            if status_f != "All" and r["status"] != status_f:
                 continue
-            if subject_f != "all" and r["subject"] != subject_f:
+            if subject_f != "All" and r["subject"] != subject_f:
                 continue
             if search_q and search_q not in r["title"].lower():
                 continue
@@ -412,26 +415,22 @@ class HomeworkPlanner:
         win.configure(bg="#ffffff")
         win.state("zoomed")
 
-        # Center-top container
         container = tk.Frame(win, bg="#ffffff")
-        container.pack(expand=True, anchor="n")  # stick to top center
+        container.pack(expand=True, anchor="n")
 
         form = tk.Frame(container, pady=20, padx=20, bg="#ffffff")
         form.pack()
 
-        # Title
         tk.Label(form, text="Title:", bg="#ffffff", font=BOLD_FONT).grid(row=0, column=0, pady=5, padx=5, sticky="e")
         e_title = tk.Entry(form, width=40, font=DEFAULT_FONT)
         e_title.insert(0, row["title"])
         e_title.grid(row=0, column=1, pady=5, padx=5)
 
-        # Subject
         tk.Label(form, text="Subject:", bg="#ffffff", font=BOLD_FONT).grid(row=1, column=0, pady=5, padx=5, sticky="e")
         e_subject = tk.Entry(form, width=40, font=DEFAULT_FONT)
         e_subject.insert(0, row["subject"])
         e_subject.grid(row=1, column=1, pady=5, padx=5)
 
-        # Due Date
         tk.Label(form, text="Due Date:", bg="#ffffff", font=BOLD_FONT).grid(row=2, column=0, pady=5, padx=5, sticky="e")
         years = [str(y) for y in range(datetime.now().year, datetime.now().year + 6)]
         months = [str(m).zfill(2) for m in range(1, 13)]
@@ -463,24 +462,27 @@ class HomeworkPlanner:
         e_month.pack(side=tk.LEFT, padx=2)
         e_day.pack(side=tk.LEFT, padx=2)
 
-        # Priority
         tk.Label(form, text="Priority:", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, pady=5, padx=5, sticky="e")
-        e_priority = tk.Entry(form, width=40, font=DEFAULT_FONT)
-        e_priority.insert(0, str(row["priority"]))
-        e_priority.grid(row=3, column=1, pady=5, padx=5)
+        e_priority = ttk.Combobox(form, values=["1", "2", "3", "4", "5", "Custom"],
+                                 state="readonly", font=DEFAULT_FONT, width=10)
+        e_priority.set(str(row["priority"]))
+        e_priority.grid(row=3, column=1, pady=5, padx=5, sticky="w")
 
-        # Details
         tk.Label(form, text="Details:", bg="#ffffff", font=BOLD_FONT).grid(row=4, column=0, pady=5, padx=5, sticky="ne")
         e_details = tk.Text(form, width=40, height=6, font=DEFAULT_FONT)
         e_details.insert("1.0", row["details"])
         e_details.grid(row=4, column=1, pady=5, padx=5)
-        
+
         def save():
             try:
                 due = f"{e_year.get()}-{e_month.get()}-{e_day.get()}"
-                datetime.strptime(due, "%Y-%m-%d")
+                due_date = datetime.strptime(due, "%Y-%m-%d")
+                if due_date.date() < datetime.today().date():
+                    messagebox.showwarning("Invalid Date", "Due date cannot be in the past!")
+                    return
             except:
-                due = None
+                messagebox.showwarning("Format Error", "Please select a valid due date.")
+                return
 
             row["title"] = e_title.get()
             row["subject"] = e_subject.get()
@@ -493,7 +495,6 @@ class HomeworkPlanner:
             save_tasks_to_json(tasks)
             self.load_tasks()
 
-            # --- Sync reminder if exists ---
             reminders = load_reminders_from_json()
             for rem in reminders:
                 if rem.get("task_id") == row["id"]:
@@ -503,14 +504,13 @@ class HomeworkPlanner:
                     rem["status"] = "Pending"
             save_reminders_to_json(reminders)
 
-            messagebox.showinfo("Success", "Task updated successfully!")  # Confirmation message
+            messagebox.showinfo("Success", "Task updated successfully!")
 
-            # --- Prompt to update/add reminder ---
             if messagebox.askyesno("Update Reminder", "Do you want to update or add a reminder for this task?"):
                 self.add_reminder_from_task(row)
 
         tk.Button(form, text="Save", command=save, bg="#4caf50", fg="white", font=DEFAULT_FONT, width=20)\
-        .grid(row=5, column=0, columnspan=2, pady=15)
+            .grid(row=5, column=0, columnspan=2, pady=15)
 
     def delete_task(self):
         sel = self.tree.selection()
@@ -521,19 +521,16 @@ class HomeworkPlanner:
             tasks = load_tasks_from_json()
             tasks = [t for t in tasks if t["id"] != task_id]
             save_tasks_to_json(tasks)
-            # Also delete corresponding reminder
             reminders = load_reminders_from_json()
             reminders = [r for r in reminders if r.get("task_id") != task_id]
             save_reminders_to_json(reminders)
             self.load_tasks()
-            messagebox.showinfo("Deleted", "Task deleted successfully!")  # Confirmation message
+            messagebox.showinfo("Deleted", "Task deleted successfully!")
 
-# ---------------- Main ----------------
 def main():
     root = tk.Tk()
     app = HomeworkPlanner(root)
     root.mainloop()
 
 if __name__ == "__main__":
-
     main()
