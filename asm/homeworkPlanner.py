@@ -8,11 +8,13 @@ import os
 DATA_FILE = "homework.json"
 REMINDER_FILE = "reminders.json"
 
+# ---------- Global Fonts ----------
 DEFAULT_FONT = ("Arial", 14)
 BOLD_FONT = ("Arial", 14, "bold")
 TITLE_FONT = ("Arial", 16, "bold")
 SMALL_FONT = ("Arial", 12)
 
+# ---------- JSON Helpers ----------
 def load_json(file_path):
     if not os.path.exists(file_path):
         return []
