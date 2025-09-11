@@ -178,7 +178,14 @@ def start_main_app():
 
 
 if __name__ == "__main__":
+    login_success = {"status": False}
+    def on_login_success():
+        login_success["status"] = True
+        login_root.destroy()
+
     login_root = tk.Tk()
-    LoginWindow(login_root, on_success=None)  # No callback needed
-    login_root.mainloop()  # Wait until login window closes
-    start_main_app()
+    LoginWindow(login_root, on_success=on_login_success)
+    login_root.mainloop()
+
+    if login_success["status"]:
+        start_main_app()
