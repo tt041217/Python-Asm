@@ -119,11 +119,11 @@ class HomeworkPlanner:
         filter_frame.pack(fill="x", padx=10, pady=5)
 
         # Add Back button above the clock, right aligned
-        back_btn = tk.Button(
-            filter_frame, text="Back", bg="#2196f3", fg="white", font=DEFAULT_FONT,
-            command=lambda: self.notebook.select(0)
-        )
-        back_btn.grid(row=0, column=3, padx=10, pady=10, sticky="e")
+        #back_btn = tk.Button(
+           #filter_frame, text="Back", bg="#2196f3", fg="white", font=DEFAULT_FONT,
+           # command=lambda: self.notebook.select(0)
+        #)
+        #back_btn.grid(row=0, column=3, padx=10, pady=10, sticky="e")
 
         self.clock_label = tk.Label(
             filter_frame, text="", bg="#e8eaf6", font=("Arial", 30), fg="#333"
