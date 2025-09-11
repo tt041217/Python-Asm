@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
+import tkinter.simpledialog as simpledialog
 import json
 import os
 
@@ -60,6 +61,12 @@ class HomeworkPlanner:
 
         self.tab_tasks = tk.Frame(notebook, bg="#ffffff")
         self.tab_add = tk.Frame(notebook, bg="#ffffff")
+
+        style = ttk.Style()
+        style.configure("Big.TButton",
+                font=("Arial", 14, "bold"),
+                padding=[20, 10])
+        style.configure("TNotebook.Tab", font=("Arial", 16, "bold"), padding=[20, 10])
 
         notebook.add(self.tab_tasks, text="📋 All Tasks")
         notebook.add(self.tab_add, text="➕ Add Task")
@@ -121,7 +128,7 @@ class HomeworkPlanner:
         )
         text.insert("1.0", details)
         text.config(state="disabled")  # make read-only
-
+    
     # ---------------- Tasks Tab ----------------
     def setup_tasks_tab(self):
         # Filters frame
@@ -138,10 +145,9 @@ class HomeworkPlanner:
         )
         self.clock_label.grid(row=0, column=2, padx=20, sticky="e")
 
-        # Force column 1 to expand and push clock to the right
         filter_frame.grid_columnconfigure(1, weight=1)
         tk.Label(filter_frame, text="Filter by Status:", bg="#e8eaf6", font=DEFAULT_FONT)\
-            .grid(row=0, column=0, sticky="w", padx=5, pady=10)
+            .grid(row=0, column=1, sticky="w", padx=5, pady=10)
         self.status_filter = ttk.Combobox(filter_frame, values=["All", "Todo", "Done"], width=15, font=DEFAULT_FONT)
         self.status_filter.set("All")
         self.status_filter.grid(row=0, column=1, sticky="w", padx=10, pady=10)
@@ -159,7 +165,7 @@ class HomeworkPlanner:
 
         tk.Button(filter_frame, text="Apply", bg="#4caf50", fg="white", font=DEFAULT_FONT,
                 command=self.load_tasks)\
-            .grid(row=3, column=0, columnspan=2, pady=20)
+            .grid(row=3, column=0, columnspan=1, pady=20)
 
         style = ttk.Style()
         style.configure("Treeview", rowheight=30, font=DEFAULT_FONT)
@@ -178,12 +184,21 @@ class HomeworkPlanner:
 
         self.tree.bind("<Double-1>", self.show_task_details)       
 
-        btns = tk.Frame(self.tab_tasks, pady=5, bg="#ffffff")
-        btns.pack()
+        btn_frame = tk.Frame(self.tab_tasks, bg="white")
+        btn_frame.pack(fill="x", pady=10)
 
-        tk.Button(btns, text="Mark Done", command=self.mark_done, bg="#4caf50", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
-        tk.Button(btns, text="Edit Task", command=self.edit_task, bg="#2196f3", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
-        tk.Button(btns, text="Delete Task", command=self.delete_task, bg="#f44336", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
+        done_btn = ttk.Button(btn_frame, text="Mark as Done", style="Big.TButton", command=self.mark_done)
+        edit_btn = ttk.Button(btn_frame, text="Edit Task", style="Big.TButton", command=self.edit_task)
+        delete_btn = ttk.Button(btn_frame, text="Delete Task", style="Big.TButton", command=self.delete_task)
+
+        # Use grid for even spacing + center
+        btn_frame.columnconfigure(0, weight=1)
+        btn_frame.columnconfigure(1, weight=1)
+        btn_frame.columnconfigure(2, weight=1)
+
+        done_btn.grid(row=0, column=0, padx=20, pady=5)
+        edit_btn.grid(row=0, column=1, padx=20, pady=5)
+        delete_btn.grid(row=0, column=2, padx=20, pady=5)
 
     # ---------------- Add Tab ----------------
     def setup_add_tab(self):
@@ -193,7 +208,7 @@ class HomeworkPlanner:
         tk.Label(form, text="Title:", bg="#ffffff", font=BOLD_FONT).grid(row=0, column=0, sticky="e", pady=5, padx=5)
         tk.Label(form, text="Subject:", bg="#ffffff", font=BOLD_FONT).grid(row=1, column=0, sticky="e", pady=5, padx=5)
         tk.Label(form, text="Due Date:", bg="#ffffff", font=BOLD_FONT).grid(row=2, column=0, sticky="e", pady=5, padx=5)
-        tk.Label(form, text="Priority (1-5):", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, sticky="e", pady=5, padx=5)
+        tk.Label(form, text="Priority:", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, sticky="e", pady=5, padx=5)
         tk.Label(form, text="Details:", bg="#ffffff", font=BOLD_FONT).grid(row=4, column=0, sticky="ne", pady=5, padx=5)
 
         self.title_entry = tk.Entry(form, width=40, font=DEFAULT_FONT)
@@ -221,9 +236,20 @@ class HomeworkPlanner:
         self.day_box.set(str(datetime.now().day).zfill(2))
         self.day_box.pack(side=tk.LEFT, padx=2)
 
-        self.priority_entry = tk.Entry(form, width=40, font=DEFAULT_FONT)
-        self.priority_entry.insert(0, "3")
-        self.priority_entry.grid(row=3, column=1, pady=5, padx=5)
+        self.priority_box = ttk.Combobox(form, values=["1", "2", "3", "4", "5", "Custom"],
+                                 state="readonly", font=DEFAULT_FONT, width=10)
+        self.priority_box.set("3")  # default value
+        self.priority_box.grid(row=3, column=1, sticky="w", pady=5, padx=5)
+
+        def check_priority(event):
+            if self.priority_box.get() == "Custom":
+                val = simpledialog.askinteger("Custom Priority", "Enter a priority number (6 or higher):")
+            if val and val > 5:
+                self.priority_box.set(str(val))
+            else:
+                messagebox.showwarning("Invalid", "Please enter a number greater than 5.")
+                self.priority_box.set("3")  # reset if invalid
+        self.priority_box.bind("<<ComboboxSelected>>", check_priority)
 
         self.details_entry = tk.Text(form, width=40, height=6, font=DEFAULT_FONT)
         self.details_entry.grid(row=4, column=1, pady=5, padx=5)
@@ -242,13 +268,18 @@ class HomeworkPlanner:
         subject = self.subject_entry.get().strip()
         try:
             due = f"{self.year_box.get()}-{self.month_box.get()}-{self.day_box.get()}"
-            datetime.strptime(due, "%Y-%m-%d")
+            due_date = datetime.strptime(due, "%Y-%m-%d")
+            if due_date.date() < datetime.today().date():
+                messagebox.showwarning("Invalid Date", "Due date cannot be in the past!")
+                return
         except:
-            due = None
+            messagebox.showwarning("Format Error", "Please select a valid due date.")
+        return
         try:
-            priority = int(self.priority_entry.get())
+            priority = int(self.priority_box.get())
         except:
             priority = 3
+
         details = self.details_entry.get("1.0", "end").strip()
 
         tasks = load_tasks_from_json()
@@ -335,8 +366,7 @@ class HomeworkPlanner:
     def clear_add_form(self):
         self.title_entry.delete(0, tk.END)
         self.subject_entry.delete(0, tk.END)
-        self.priority_entry.delete(0, tk.END)
-        self.priority_entry.insert(0, "3")
+        self.priority_box.set("3")  # reset dropdown instead of entry
         self.details_entry.delete("1.0", tk.END)
 
     def load_tasks(self):
@@ -345,7 +375,7 @@ class HomeworkPlanner:
         tasks = load_tasks_from_json()
         tasks.sort(key=lambda x: x.get("due_at") or "")
 
-        subjects = {"all"}
+        subjects = {"All"}  # <-- Fix: use "All" (uppercase)
         for r in tasks:
             if r.get("subject"):
                 subjects.add(r["subject"])
@@ -356,9 +386,9 @@ class HomeworkPlanner:
         search_q = self.search_entry.get().strip().lower()
 
         for r in tasks:
-            if status_f != "all" and r["status"] != status_f:
+            if status_f != "All" and r["status"] != status_f:  # <-- Fix: use "All"
                 continue
-            if subject_f != "all" and r["subject"] != subject_f:
+            if subject_f != "All" and r["subject"] != subject_f:  # <-- Fix: use "All"
                 continue
             if search_q and search_q not in r["title"].lower():
                 continue
@@ -465,9 +495,10 @@ class HomeworkPlanner:
 
         # Priority
         tk.Label(form, text="Priority:", bg="#ffffff", font=BOLD_FONT).grid(row=3, column=0, pady=5, padx=5, sticky="e")
-        e_priority = tk.Entry(form, width=40, font=DEFAULT_FONT)
-        e_priority.insert(0, str(row["priority"]))
-        e_priority.grid(row=3, column=1, pady=5, padx=5)
+        e_priority = ttk.Combobox(form, values=["1", "2", "3", "4", "5", "Custom"],
+                                state="readonly", font=DEFAULT_FONT, width=10)
+        e_priority.set(str(row["priority"]))
+        e_priority.grid(row=3, column=1, pady=5, padx=5, sticky="w")
 
         # Details
         tk.Label(form, text="Details:", bg="#ffffff", font=BOLD_FONT).grid(row=4, column=0, pady=5, padx=5, sticky="ne")
@@ -478,9 +509,13 @@ class HomeworkPlanner:
         def save():
             try:
                 due = f"{e_year.get()}-{e_month.get()}-{e_day.get()}"
-                datetime.strptime(due, "%Y-%m-%d")
+                due_date = datetime.strptime(due, "%Y-%m-%d")
+                if due_date.date() < datetime.today().date():
+                    messagebox.showwarning("Invalid Date", "Due date cannot be in the past!")
+                    return
             except:
-                due = None
+                messagebox.showwarning("Format Error", "Please select a valid due date.")
+                return
 
             row["title"] = e_title.get()
             row["subject"] = e_subject.get()
