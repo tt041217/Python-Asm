@@ -6,6 +6,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from tkcalendar import DateEntry
+import subprocess  # Add this import at the top if not present
 
 DATA_FILE = "reminders.json"
 HOMEWORK_FILE = "homeworkPlanner.json"
@@ -150,6 +151,10 @@ class ReminderApp:
         self.edit_btn.pack(side="left", padx=10)
         self.refresh_btn = tk.Button(btn_frame, text="Refresh", command=self.refresh_list, bg="#1976d2", fg="white", font=REM_FONT)
         self.refresh_btn.pack(side="left", padx=10)
+
+        # --- Add Back Button ---
+        back_btn = tk.Button(master, text="Back to Homepage", command=self.go_homepage, bg="#455a64", fg="white", font=REM_FONT)
+        back_btn.pack(pady=10)
 
         self.active_tree = self.tree_upcoming
 
@@ -339,6 +344,9 @@ class ReminderApp:
         self.running = False
         self.save_reminders()
         self.master.destroy()
+
+    def go_homepage(self):
+        self.master.destroy()  # Just close this Toplevel window
 
 if __name__ == "__main__":
     root = tk.Tk()
