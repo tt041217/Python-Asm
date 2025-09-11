@@ -222,6 +222,11 @@ class CalculatorApp:
         self.update_Semester_menu()
         self.update_display()
         self.grade_var.set(self.tarumt_grades_list[0]) # Set initial grade selection
+        
+        self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨",
+                               font=('Arial', 16),
+                               bg="#2d3436", fg="white", pady=8)
+        self.footer.pack(side='bottom', fill="x")
     
     def on_listbox_select(self, event):
         """
