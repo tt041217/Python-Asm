@@ -75,39 +75,81 @@ class HomeworkPlanner:
 
     # ---------------- Clock ----------------
     def update_clock(self):
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.status_bar.config(text=f"📅 {now}")
+        now = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
+        self.clock_label.config(text=now)
         self.root.after(1000, self.update_clock)
-
+        
     # ---------------- Task Details ----------------
-    def show_details(self, event=None):
+    def show_task_details(self, event=None):
         sel = self.tree.selection()
-        if sel:
-            task_id = int(sel[0])
-            tasks = load_tasks_from_json()
-            row = next((t for t in tasks if t["id"] == task_id), None)
-            if row:
-                self.details_label.config(text=f"Details: {row.get('details', '—') or '—'}")
-            else:
-                self.details_label.config(text="Details: —")
-        else:
-            self.details_label.config(text="Details: —")
+        if not sel:
+            return
+        task_id = int(sel[0])
+        tasks = load_tasks_from_json()
+        task = next((t for t in tasks if t["id"] == task_id), None)
+        if not task:
+            return
+
+        # Create a new popup window
+        details_win = tk.Toplevel(self.root)
+        details_win.title("Task Details")
+        details_win.geometry("400x300")
+        details_win.configure(bg="#f9f9f9")
+
+        # Title
+        tk.Label(details_win, text="Task Details", font=BOLD_FONT, bg="#f9f9f9").pack(pady=10)
+
+        # Frame with scrollbar
+        frame = tk.Frame(details_win, bg="#f9f9f9")
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        text = tk.Text(frame, wrap="word", font=SMALL_FONT, bg="white", relief="solid", bd=1)
+        scrollbar = tk.Scrollbar(frame, command=text.yview)
+        text.config(yscrollcommand=scrollbar.set)
+
+        text.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Insert task details
+        details = (
+            f"Title: {task['title']}\n"
+            f"Subject: {task['subject']}\n"
+            f"Due Date: {task['due_at'] or '—'}\n"
+            f"Priority: {task['priority']}\n"
+            f"Status: {task['status']}\n\n"
+            f"Details:\n{task.get('details', '—')}"
+        )
+        text.insert("1.0", details)
+        text.config(state="disabled")  # make read-only
 
     # ---------------- Tasks Tab ----------------
     def setup_tasks_tab(self):
-        filter_frame = tk.Frame(self.tab_tasks, bg="#e8eaf6", pady=15, padx=20)
-        filter_frame.pack(fill=tk.X, anchor="w")
+        # Filters frame
+        filter_frame = tk.Frame(self.tab_tasks, bg="#e8eaf6")
+        filter_frame.pack(fill="x", padx=10, pady=5)
 
+        # Add clock (column 2, but expand to far right)
+        self.clock_label = tk.Label(
+            filter_frame,
+            text="",
+            bg="#e8eaf6",
+            font=("Arial", 30),   
+            fg="#333"                     
+        )
+        self.clock_label.grid(row=0, column=2, padx=20, sticky="e")
+
+        # Force column 1 to expand and push clock to the right
+        filter_frame.grid_columnconfigure(1, weight=1)
         tk.Label(filter_frame, text="Filter by Status:", bg="#e8eaf6", font=DEFAULT_FONT)\
             .grid(row=0, column=0, sticky="w", padx=5, pady=10)
-        self.status_filter = ttk.Combobox(filter_frame, values=["all", "todo", "done"], width=15, font=DEFAULT_FONT)
-        self.status_filter.set("all")
+        self.status_filter = ttk.Combobox(filter_frame, values=["All", "Todo", "Done"], width=15, font=DEFAULT_FONT)
+        self.status_filter.set("All")
         self.status_filter.grid(row=0, column=1, sticky="w", padx=10, pady=10)
 
         tk.Label(filter_frame, text="Filter by Subject:", bg="#e8eaf6", font=DEFAULT_FONT)\
             .grid(row=1, column=0, sticky="w", padx=5, pady=10)
-        self.subject_filter = ttk.Combobox(filter_frame, values=["all"], width=15, font=DEFAULT_FONT)
-        self.subject_filter.set("all")
+        self.subject_filter = ttk.Combobox(filter_frame, values=["All"], width=15, font=DEFAULT_FONT)
+        self.subject_filter.set("All")
         self.subject_filter.grid(row=1, column=1, sticky="w", padx=10, pady=10)
 
         tk.Label(filter_frame, text="Search:", bg="#e8eaf6", font=DEFAULT_FONT)\
@@ -117,7 +159,7 @@ class HomeworkPlanner:
 
         tk.Button(filter_frame, text="Apply", bg="#4caf50", fg="white", font=DEFAULT_FONT,
                 command=self.load_tasks)\
-            .grid(row=3, column=0, columnspan=2, pady=20)
+            .grid(row=3, column=0, columnspan=1, pady=20)
 
         style = ttk.Style()
         style.configure("Treeview", rowheight=30, font=DEFAULT_FONT)
@@ -134,20 +176,11 @@ class HomeworkPlanner:
             self.tree.column(col, width=160, anchor="center")
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        self.details_label = tk.Label(
-        self.tab_tasks,
-        text="Details: —",
-        anchor="w",
-        justify="left",
-        bg="#f0f0f0",
-        font=DEFAULT_FONT,
-        wraplength=900  # wrap long text so it doesn't go off screen
-        )
-        self.tree.bind("<<TreeviewSelect>>", self.show_details)
-        self.details_label.pack(fill=tk.X, padx=10, pady=5)        
+        self.tree.bind("<Double-1>", self.show_task_details)       
 
         btns = tk.Frame(self.tab_tasks, pady=5, bg="#ffffff")
         btns.pack()
+
         tk.Button(btns, text="Mark Done", command=self.mark_done, bg="#4caf50", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
         tk.Button(btns, text="Edit Task", command=self.edit_task, bg="#2196f3", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
         tk.Button(btns, text="Delete Task", command=self.delete_task, bg="#f44336", fg="white", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
@@ -226,7 +259,7 @@ class HomeworkPlanner:
             "subject": subject,
             "due_at": due,
             "priority": priority,
-            "status": "todo",
+            "status": "Todo",
             "details": details,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
