@@ -27,9 +27,9 @@ class HomePage:
         master.bind("<Configure>", self.resize_background)
 
         # Header (like a navbar)
-        self.header = tk.Label(master, text="✨ Welcome to My Application Suite ✨",
+        self.header = tk.Label(master, text="✨ Welcome to My TARUMT App ✨",
                                font=('Helvetica', 28, 'bold'),
-                               bg="#2d3436", fg="white", pady=15)
+                               bg="#74b9ff", fg="white", pady=15)
         self.header.pack(fill="x")
 
         # Clock
@@ -55,8 +55,20 @@ class HomePage:
         # Footer
         self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨",
                                font=('Arial', 16),
-                               bg="#2d3436", fg="white", pady=8)
+                               bg="#a29bfe", fg="white", pady=8)
         self.footer.pack(side='bottom', fill="x")
+        # Logout button (top right)
+        self.logout_btn = tk.Button(master, text="Logout", font=('Helvetica', 12, 'bold'), bg="#e17055", fg="white", command=self.logout, relief="flat", padx=15, pady=5)
+        self.logout_btn.place(relx=0.98, rely=0.02, anchor="ne")
+    def logout(self):
+        self.master.destroy()
+        # Reopen login window
+        root = tk.Tk()
+        def on_login_success():
+            root.destroy()
+            start_main_app()
+        LoginWindow(root, on_success=on_login_success)
+        root.mainloop()
 
     # Clock update function
     def update_time(self):
