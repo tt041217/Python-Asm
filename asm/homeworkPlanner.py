@@ -549,7 +549,7 @@ def main():
     root = tk.Tk()
     app_win = tk.Toplevel(root)
     app = HomeworkPlanner(app_win)
-    root.withdraw()  # Hide root, only show HomeworkPlanner window
+    root.withdraw()
     app_win.protocol("WM_DELETE_WINDOW", app_win.withdraw)
     app_win.mainloop()
 

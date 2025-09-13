@@ -6,6 +6,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from tkcalendar import DateEntry
+import subprocess  # Add this import at the top if not present
 
 DATA_FILE = "reminders.json"
 HOMEWORK_FILE = "homeworkPlanner.json"
@@ -82,13 +83,9 @@ class ReminderApp:
             font=REM_FONT,
             date_pattern='yyyy-mm-dd',
             showweeknumbers=False,
-            state="readonly",
             width=12
         )
         self.date_entry.grid(row=1, column=1, padx=5, pady=(2, 2), sticky="w")
-        def open_calendar(event):
-            self.date_entry.event_generate('<Down>')
-        self.date_entry.bind('<Button-1>', open_calendar)
 
         tk.Label(input_frame, text="Time:", bg="#e0f7fa", font=REM_FONT).grid(row=2, column=0, sticky="w", padx=5, pady=5)
         time_frame = tk.Frame(input_frame, bg="#e0f7fa")
@@ -150,6 +147,16 @@ class ReminderApp:
         self.edit_btn.pack(side="left", padx=10)
         self.refresh_btn = tk.Button(btn_frame, text="Refresh", command=self.refresh_list, bg="#1976d2", fg="white", font=REM_FONT)
         self.refresh_btn.pack(side="left", padx=10)
+
+        # --- Add Back Button ---
+        back_btn = tk.Button(master, text="Back to Homepage", command=self.go_homepage, bg="#455a64", fg="white", font=REM_FONT)
+        back_btn.pack(pady=10)
+        
+        # Footer
+        self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨",
+                               font=('Arial', 16),
+                               bg="#a29bfe", fg="white", pady=8)
+        self.footer.pack(side='bottom', fill="x")
 
         self.active_tree = self.tree_upcoming
 
@@ -338,9 +345,15 @@ class ReminderApp:
     def on_close(self):
         self.running = False
         self.save_reminders()
-        self.master.destroy()
+        self.master.withdraw()
+
+    def go_homepage(self):
+        self.master.withdraw()  # Hide the window instead of destroying
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = ReminderApp(root)
-    root.mainloop()
+    app_win = tk.Toplevel(root)
+    app = ReminderApp(app_win)
+    root.withdraw()  # Hide root, only show Reminder window
+    app_win.protocol("WM_DELETE_WINDOW", app.on_close)
+    app_win.mainloop()

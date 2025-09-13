@@ -30,7 +30,7 @@ class LoginWindow:
         self.master = master
         self.on_success = on_success
         master.title("Secure Login")
-        master.configure(bg="#74b9ff")
+        master.configure(bg="#130513")
         master.geometry("400x400") # Set a fixed size
 
         # Custom font
@@ -39,18 +39,20 @@ class LoginWindow:
         self.button_font = font.Font(family="Helvetica", size=10, weight="bold")
 
         # Center frame for modern feel
-        main_frame = tk.Frame(master, bg="#74b9ff", padx=30, pady=30, bd=5)
+        main_frame = tk.Frame(master, bg="#130513", padx=30, pady=30, bd=5)
         main_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        tk.Label(main_frame, text="Welcome!", font=self.title_font, bg="#74b9ff", fg="white").pack(pady=(0, 20))
+        # "Welcome!" label (remove bg="#794545")
+        tk.Label(main_frame, text="Welcome!", font=self.label_font, bg="#130513", fg="white").pack(pady=(0, 20))
 
-        # User ID input
-        tk.Label(main_frame, text="User ID:", font=self.label_font, bg="#74b9ff", fg="white").pack(anchor="w")
+        # User ID input label (remove bg="#74b9ff")
+        tk.Label(main_frame, text="User ID:", font=self.label_font, bg="#130513", fg="white").pack(anchor="w")
+
         self.id_entry = tk.Entry(main_frame, font=self.label_font, relief="flat", bd=2, width=30)
         self.id_entry.pack(pady=(0, 15))
 
-        # Password input
-        tk.Label(main_frame, text="Password:", font=self.label_font, bg="#74b9ff", fg="white").pack(anchor="w")
+        # Password input label (already correct)
+        tk.Label(main_frame, text="Password:", font=self.label_font, bg="#130513", fg="white").pack(anchor="w")
         self.pw_entry = tk.Entry(main_frame, font=self.label_font, show="*", relief="flat", bd=2, width=30)
         self.pw_entry.pack(pady=(0, 25))
 
@@ -70,8 +72,7 @@ class LoginWindow:
         for user in users:
             if user["id"] == user_id and user["password"] == hash_password(pw):
                 messagebox.showinfo("Success", "Login successful!", parent=self.master)
-                # The rest of your app would launch here
-                self.master.destroy() 
+                self.on_success()  # <-- Add this line to trigger homepage
                 return
         messagebox.showerror("Error", "Invalid ID or password.", parent=self.master)
 

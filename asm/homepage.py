@@ -27,9 +27,9 @@ class HomePage:
         master.bind("<Configure>", self.resize_background)
 
         # Header (like a navbar)
-        self.header = tk.Label(master, text="✨ Welcome to My Application Suite ✨",
+        self.header = tk.Label(master, text="✨ Welcome to My TARUMT App ✨",
                                font=('Helvetica', 28, 'bold'),
-                               bg="#2d3436", fg="white", pady=15)
+                               bg="#74b9ff", fg="white", pady=15)
         self.header.pack(fill="x")
 
         # Clock
@@ -55,8 +55,20 @@ class HomePage:
         # Footer
         self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨",
                                font=('Arial', 16),
-                               bg="#2d3436", fg="white", pady=8)
+                               bg="#a29bfe", fg="white", pady=8)
         self.footer.pack(side='bottom', fill="x")
+        # Logout button (top right)
+        self.logout_btn = tk.Button(master, text="Logout", font=('Helvetica', 12, 'bold'), bg="#e17055", fg="white", command=self.logout, relief="flat", padx=15, pady=5)
+        self.logout_btn.place(relx=0.98, rely=0.02, anchor="ne")
+    def logout(self):
+        self.master.destroy()
+        # Reopen login window
+        root = tk.Tk()
+        def on_login_success():
+            root.destroy()
+            start_main_app()
+        LoginWindow(root, on_success=on_login_success)
+        root.mainloop()
 
     # Clock update function
     def update_time(self):
@@ -158,15 +170,13 @@ class HomePage:
         return img
 
     def open_application(self, app_name):
+        import subprocess
         if app_name == "CGPA & GPA Calculator":
-            calc_window = tk.Toplevel(self.master)
-            CalculatorApp(calc_window)
+            subprocess.Popen(["python", "cgpa.py"])
         elif app_name == "Homework Planner":
-            planner_window = tk.Toplevel(self.master)
-            HomeworkPlanner(planner_window)
+            subprocess.Popen(["python", "homeworkPlanner.py"])
         elif app_name == "Simple Reminder":
-            reminders_window = tk.Toplevel(self.master)
-            ReminderApp(reminders_window)
+            subprocess.Popen(["python", "reminders.py"])
         else:
             messagebox.showinfo("Info", f"Opening {app_name}")
 
@@ -178,7 +188,14 @@ def start_main_app():
 
 
 if __name__ == "__main__":
+    login_success = {"status": False}
+    def on_login_success():
+        login_success["status"] = True
+        login_root.destroy()
+
     login_root = tk.Tk()
-    LoginWindow(login_root, on_success=None)  # No callback needed
-    login_root.mainloop()  # Wait until login window closes
-    start_main_app()
+    LoginWindow(login_root, on_success=on_login_success)
+    login_root.mainloop()
+
+    if login_success["status"]:
+        start_main_app()

@@ -171,42 +171,62 @@ class CalculatorApp:
 
         # Action Buttons Frame
         self.action_btn_frame = tk.Frame(self.input_frame, bg='#cce6ff')
-        self.action_btn_frame.grid(row=4, column=0, columnspan=3, pady=10)
+        self.action_btn_frame.grid(row=4, column=1, columnspan=3, pady=10)
         
+        # Define a consistent button size
+        btn_width = 12
+        btn_height = 2
+
         # Save/Update button. This button's text and command will change.
-        self.add_update_btn = tk.Button(self.action_btn_frame, text="Add Course", command=self.save_course, font=('Arial', 12, 'bold'), bg='#4CAF50', fg='white', relief='flat')
-        self.add_update_btn.pack(side='left', padx=5)
-        
+        self.add_update_btn = tk.Button(
+        self.action_btn_frame, text="Add Course", command=self.save_course,font=('Arial', 12, 'bold'), bg='#4CAF50', fg='white', relief='flat',width=btn_width, height=btn_height)
+        self.add_update_btn.pack(side='left',  padx= 5 )
+
         # The edit and delete buttons are outside the action frame to improve clarity
-        self.edit_btn = tk.Button(self.button_frame, text="Edit Selected", command=self.edit_course, font=('Arial', 14, 'bold'), bg='#FFC107', relief='flat')
+        self.edit_btn = tk.Button(
+        self.button_frame, text="Edit Selected", command=self.edit_course,font=('Arial', 14, 'bold'), bg='#FFC107', relief='flat',width=btn_width, height=btn_height)
         self.edit_btn.pack(side='left', padx=10, pady=5)
-        
-        self.delete_btn = tk.Button(self.button_frame, text="Delete Selected", command=self.delete_course, font=('Arial', 14, 'bold'), bg='#F44336', fg='white', relief='flat')
+
+        self.delete_btn = tk.Button(
+        self.button_frame, text="Delete Selected", command=self.delete_course,font=('Arial', 14, 'bold'), bg='#F44336', fg='white', relief='flat',width=btn_width, height=btn_height)
         self.delete_btn.pack(side='left', padx=10, pady=5)
-        
-        self.cancel_edit_btn = tk.Button(self.button_frame, text="Cancel Edit", command=self.cancel_edit, font=('Arial', 14), bg='#9E9E9E', relief='flat')
+
+        self.cancel_edit_btn = tk.Button(
+        self.button_frame, text="Cancel Edit", command=self.cancel_edit,font=('Arial', 14), bg='#9E9E9E', relief='flat',width=btn_width, height=btn_height)
         self.cancel_edit_btn.pack(side='left', padx=10, pady=5)
         self.cancel_edit_btn.pack_forget()
 
         # Listbox to display added courses
-        self.listbox = Listbox(self.display_frame, font=('Arial', 12), selectmode=tk.SINGLE, bg='white', relief='flat', bd=2)
+        self.listbox = Listbox(
+        self.display_frame, font=('Arial', 12), selectmode=tk.SINGLE,bg='white', relief='flat', bd=2)
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.listbox.bind('<<ListboxSelect>>', self.on_listbox_select) # Added event handler
-        
+
         self.scrollbar = Scrollbar(self.display_frame, command=self.listbox.yview)
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.listbox.config(yscrollcommand=self.scrollbar.set)
 
         # Bottom buttons
-        self.calc_btn = tk.Button(self.button_frame, text="Calculate CGPA", command=self.calculate, font=('Arial', 14, 'bold'), bg='#2196F3', fg='white', relief='flat', padx=10, pady=5)
+        self.calc_btn = tk.Button(
+        self.button_frame, text="Calculate CGPA", command=self.calculate,font=('Arial', 14, 'bold'), bg='#2196F3', fg='white', relief='flat',width=btn_width, height=btn_height)
         self.calc_btn.pack(side='left', padx=10)
+
+        self.clear_btn = tk.Button(
+        self.button_frame, text="Clear All Data", command=self.clear_data,font=('Arial', 14, 'bold'), bg='#607D8B', fg='white', relief='flat',width=btn_width, height=btn_height)
+        self.clear_btn.pack(side='left', padx=10)
         
-        self.clear_btn = tk.Button(self.button_frame, text="Clear All Data", command=self.clear_data, font=('Arial', 14, 'bold'), bg='#607D8B', fg='white', relief='flat', padx=10, pady=5)
+        self.clear_btn = tk.Button(
+        self.button_frame, text="Back ", command=self.back_to_homepage,font=('Arial', 14, 'bold'), bg='#607D8B', fg='white', relief='flat',width=btn_width, height=btn_height)
         self.clear_btn.pack(side='left', padx=10)
         
         self.update_Semester_menu()
         self.update_display()
         self.grade_var.set(self.tarumt_grades_list[0]) # Set initial grade selection
+        
+        self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨",
+                               font=('Arial', 16),
+                               bg="#a29bfe", fg="white", pady=8)
+        self.footer.pack(side='bottom', fill="x")
     
     def on_listbox_select(self, event):
         """
@@ -477,6 +497,13 @@ class CalculatorApp:
         """
         self.save_data()
         self.master.destroy()
+        
+    # In the CalculatorApp class
+    def back_to_homepage(self):
+     """
+     Closes the current Toplevel window (the calculator) to return to the homepage.
+     """
+     self.master.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()
