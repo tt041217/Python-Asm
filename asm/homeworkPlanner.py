@@ -50,26 +50,41 @@ class HomeworkPlanner:
         self.root.configure(bg="#f4f4f9")
         self.root.state("zoomed")
 
-        notebook = ttk.Notebook(root)
-        notebook.pack(fill=tk.BOTH, expand=True)
+        top_bar = tk.Frame(self.root, bg="#f4f4f9")
+        top_bar.pack(side=tk.TOP, fill=tk.X)
 
-        self.tab_tasks = tk.Frame(notebook, bg="#ffffff")
-        self.tab_add = tk.Frame(notebook, bg="#ffffff")
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
+
+        back_btn = tk.Button(
+            top_bar, text="⬅ Back to Home",
+            bg="#e53935", fg="white",
+            font=DEFAULT_FONT,
+            relief="flat", padx=15, pady=5,
+            command=self.go_back
+        )
+        back_btn.pack(side=tk.RIGHT, padx=15, pady=10)
+
+        self.tab_tasks = tk.Frame(self.notebook, bg="#ffffff")
+        self.tab_add = tk.Frame(self.notebook, bg="#ffffff")
 
         style = ttk.Style()
         style.configure("Big.TButton", font=BOLD_FONT, padding=[20, 10])
         style.configure("TNotebook.Tab", font=TITLE_FONT, padding=[20, 10])
 
-        notebook.add(self.tab_tasks, text="📋 All Tasks")
-        notebook.add(self.tab_add, text="➕ Add Task")
+        self.notebook.add(self.tab_tasks, text="📋 All Tasks")
+        self.notebook.add(self.tab_add, text="➕ Add Task")
 
         self.setup_tasks_tab()
         self.setup_add_tab()
         self.load_tasks()
-
-        self.status_bar = tk.Label(root, text="Ready", anchor="w", bg="#333", fg="white", font=SMALL_FONT)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         self.update_clock()
+
+    def go_back(self):
+        """Close planner and return to home"""
+        self.root.destroy()
+        if self.home_window:
+            self.home_window.deiconify()
 
     def update_clock(self):
         now = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
@@ -124,6 +139,9 @@ class HomeworkPlanner:
         self.clock_label.grid(row=0, column=2, padx=20, sticky="e")
 
         filter_frame.grid_columnconfigure(1, weight=1)
+        filter_frame.grid_columnconfigure(2, weight=0)
+        filter_frame.grid_columnconfigure(3, weight=0)
+
         tk.Label(filter_frame, text="Filter by Status:", bg="#e8eaf6", font=DEFAULT_FONT)\
             .grid(row=0, column=0, sticky="w", padx=5, pady=10)
         self.status_filter = ttk.Combobox(filter_frame, values=["All", "Todo", "Done"], width=15, font=DEFAULT_FONT)
@@ -138,12 +156,12 @@ class HomeworkPlanner:
 
         tk.Label(filter_frame, text="Search:", bg="#e8eaf6", font=DEFAULT_FONT)\
             .grid(row=2, column=0, sticky="w", padx=5, pady=10)
-        self.search_entry = tk.Entry(filter_frame, width=25, font=DEFAULT_FONT)
+        self.search_entry = tk.Entry(filter_frame, width=17, font=DEFAULT_FONT)
         self.search_entry.grid(row=2, column=1, sticky="w", padx=10, pady=10)
 
         tk.Button(filter_frame, text="Apply", bg="#4caf50", fg="white", font=DEFAULT_FONT,
                   command=self.load_tasks)\
-            .grid(row=3, column=0, columnspan=1, pady=20)
+            .grid(row=3, column=1, columnspan=1,padx=10, pady=10, sticky="w")
 
         style = ttk.Style()
         style.configure("Treeview", rowheight=30, font=DEFAULT_FONT)
@@ -529,8 +547,11 @@ class HomeworkPlanner:
 
 def main():
     root = tk.Tk()
-    app = HomeworkPlanner(root)
-    root.mainloop()
+    app_win = tk.Toplevel(root)
+    app = HomeworkPlanner(app_win)
+    root.withdraw()  # Hide root, only show HomeworkPlanner window
+    app_win.protocol("WM_DELETE_WINDOW", app_win.withdraw)
+    app_win.mainloop()
 
 if __name__ == "__main__":
     main()
