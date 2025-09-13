@@ -80,6 +80,12 @@ class HomeworkPlanner:
         self.load_tasks()
         self.update_clock()
 
+        # Footer
+        self.footer = tk.Label(self.root, text="✨ TARUMT Student Assistant App ✨",
+                               font=('Arial', 16),
+                               bg="#a29bfe", fg="white", pady=8)
+        self.footer.pack(side='bottom', fill="x")
+
     def go_back(self):
         """Close planner and return to home"""
         self.root.destroy()
