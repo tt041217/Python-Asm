@@ -170,15 +170,13 @@ class HomePage:
         return img
 
     def open_application(self, app_name):
+        import subprocess
         if app_name == "CGPA & GPA Calculator":
-            calc_window = tk.Toplevel(self.master)
-            CalculatorApp(calc_window)
+            subprocess.Popen(["python", "cgpa.py"])
         elif app_name == "Homework Planner":
-            planner_window = tk.Toplevel(self.master)
-            HomeworkPlanner(planner_window)
+            subprocess.Popen(["python", "homeworkPlanner.py"])
         elif app_name == "Simple Reminder":
-            reminders_window = tk.Toplevel(self.master)
-            ReminderApp(reminders_window)
+            subprocess.Popen(["python", "reminders.py"])
         else:
             messagebox.showinfo("Info", f"Opening {app_name}")
 

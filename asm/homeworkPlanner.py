@@ -118,10 +118,14 @@ class HomeworkPlanner:
         filter_frame = tk.Frame(self.tab_tasks, bg="#e8eaf6")
         filter_frame.pack(fill="x", padx=10, pady=5)
 
-        # Add Back button above the clock, right aligned
+        #Add Back button above the clock, right aligned
+        #import subprocess
+        #def back_to_homepage():
+            #self.root.destroy()
+            #subprocess.Popen(["python", "homepage.py", "--skip-login"])
         #back_btn = tk.Button(
            #filter_frame, text="Back", bg="#2196f3", fg="white", font=DEFAULT_FONT,
-           # command=lambda: self.notebook.select(0)
+            #command=back_to_homepage
         #)
         #back_btn.grid(row=0, column=3, padx=10, pady=10, sticky="e")
 
@@ -539,8 +543,11 @@ class HomeworkPlanner:
 
 def main():
     root = tk.Tk()
-    app = HomeworkPlanner(root)
-    root.mainloop()
+    app_win = tk.Toplevel(root)
+    app = HomeworkPlanner(app_win)
+    root.withdraw()  # Hide root, only show HomeworkPlanner window
+    app_win.protocol("WM_DELETE_WINDOW", app_win.withdraw)
+    app_win.mainloop()
 
 if __name__ == "__main__":
     main()

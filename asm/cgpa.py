@@ -225,7 +225,7 @@ class CalculatorApp:
         
         self.footer = tk.Label(master, text="✨ TARUMT Student Assistant App ✨",
                                font=('Arial', 16),
-                               bg="#2d3436", fg="white", pady=8)
+                               bg="#a29bfe", fg="white", pady=8)
         self.footer.pack(side='bottom', fill="x")
     
     def on_listbox_select(self, event):
