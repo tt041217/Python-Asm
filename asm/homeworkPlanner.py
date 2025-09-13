@@ -50,8 +50,20 @@ class HomeworkPlanner:
         self.root.configure(bg="#f4f4f9")
         self.root.state("zoomed")
 
-        self.notebook = ttk.Notebook(root)  # Changed to self.notebook
+        top_bar = tk.Frame(self.root, bg="#f4f4f9")
+        top_bar.pack(side=tk.TOP, fill=tk.X)
+
+        self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill=tk.BOTH, expand=True)
+
+        back_btn = tk.Button(
+            top_bar, text="⬅ Back to Home",
+            bg="#e53935", fg="white",
+            font=DEFAULT_FONT,
+            relief="flat", padx=15, pady=5,
+            command=self.go_back
+        )
+        back_btn.pack(side=tk.RIGHT, padx=15, pady=10)
 
         self.tab_tasks = tk.Frame(self.notebook, bg="#ffffff")
         self.tab_add = tk.Frame(self.notebook, bg="#ffffff")
@@ -66,10 +78,13 @@ class HomeworkPlanner:
         self.setup_tasks_tab()
         self.setup_add_tab()
         self.load_tasks()
-
-        self.status_bar = tk.Label(root, text="Ready", anchor="w", bg="#333", fg="white", font=SMALL_FONT)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         self.update_clock()
+
+    def go_back(self):
+        """Close planner and return to home"""
+        self.root.destroy()
+        if self.home_window:
+            self.home_window.deiconify()
 
     def update_clock(self):
         now = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
@@ -117,17 +132,6 @@ class HomeworkPlanner:
     def setup_tasks_tab(self):
         filter_frame = tk.Frame(self.tab_tasks, bg="#e8eaf6")
         filter_frame.pack(fill="x", padx=10, pady=5)
-
-        #Add Back button above the clock, right aligned
-        #import subprocess
-        #def back_to_homepage():
-            #self.root.destroy()
-            #subprocess.Popen(["python", "homepage.py", "--skip-login"])
-        #back_btn = tk.Button(
-           #filter_frame, text="Back", bg="#2196f3", fg="white", font=DEFAULT_FONT,
-            #command=back_to_homepage
-        #)
-        #back_btn.grid(row=0, column=3, padx=10, pady=10, sticky="e")
 
         self.clock_label = tk.Label(
             filter_frame, text="", bg="#e8eaf6", font=("Arial", 30), fg="#333"
@@ -545,7 +549,7 @@ def main():
     root = tk.Tk()
     app_win = tk.Toplevel(root)
     app = HomeworkPlanner(app_win)
-    root.withdraw()  # Hide root, only show HomeworkPlanner window
+    root.withdraw()
     app_win.protocol("WM_DELETE_WINDOW", app_win.withdraw)
     app_win.mainloop()
 
