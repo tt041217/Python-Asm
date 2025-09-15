@@ -100,11 +100,9 @@ Contributions are welcome! If you'd like to improve this project, follow these s
 
 ## Authors
 
-- **Member 1:** [GitHub Profile](https://github.com/tt041217)
-- **Member 2:** [GitHub Profile](https://github.com/member2)
-- **Member 3:** [GitHub Profile](https://github.com/member3)
-
-_Update with actual member names and profiles_
+- **Member 1:** [Chai Kah Quan](https://github.com/tt041217)
+- **Member 2:** [Tan Ting Hng](https://github.com/tth-git)
+- **Member 3:** [Ang Zhi Yee](https://github.com/ANG-447)
 
 ---
 
