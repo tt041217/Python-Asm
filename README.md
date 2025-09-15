@@ -100,7 +100,7 @@ Contributions are welcome! If you'd like to improve this project, follow these s
 
 ## Authors
 
-- **Member 1:** [GitHub Profile](https://github.com/member1)
+- **Member 1:** [GitHub Profile](https://github.com/tt041217)
 - **Member 2:** [GitHub Profile](https://github.com/member2)
 - **Member 3:** [GitHub Profile](https://github.com/member3)
 
