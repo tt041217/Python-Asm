@@ -30,15 +30,18 @@ Python-Asm is a TARUMT Student Assistant App developed as an assignment project 
 - **Simple Reminder:** Set up reminders for important academic and personal tasks.
 
 ---
+<img src="assets/cgpa.png" alt="App Screenshot" width="600">
+<img src="assets/hwp.png" alt="App Screenshot" width="600">
+<img src="assets/reminder.png" alt="App Screenshot" width="600">
 
 ## Screenshots
-CGPA & GPA Calculator App
+""CGPA & GPA Calculator App""
 ![CGPA Calculator Screenshot](assets/cgpa.png)
 
-Homework Planner App
+""Homework Planner App""
 ![Homework Planner Screenshot](assets/hwp.png)
 
-Simple Reminder App
+""Simple Reminder App""
 ![Reminder Screenshot](assets/reminder.png)
 
 ---
