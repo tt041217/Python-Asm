@@ -10,4 +10,4 @@ This is an assignment consist of 3 members. This assignment is about a TARUMT St
 
 ## Installation
 1. Clone this repository:
-   
+   git clone https://github.com/tt041217/Python-Asm.git
