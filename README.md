@@ -33,13 +33,13 @@ Python-Asm is a TARUMT Student Assistant App developed as an assignment project 
 
 ## Screenshots
 **CGPA & GPA Calculator App**
-<img src="assets/cgpa.png" alt="App Screenshot" width="600">
+![App Screenshot](assets/cpga.png)
 
 **Homework Planner App**
-<img src="assets/hwp.png" alt="App Screenshot" width="600">
+![App Screenshot](assets/hwp.png)
 
 **Simple Reminder App**
-<img src="assets/reminder.png" alt="App Screenshot" width="600">
+![App Screenshot](assets/reminder.png)
 
 ---
 
