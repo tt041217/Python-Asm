@@ -498,6 +498,9 @@ class HomeworkPlanner:
         e_details.grid(row=4, column=1, pady=5, padx=5)
 
         def save():
+            if not e_title.get().strip():
+                messagebox.showwarning("Missing", "Title is required")
+                return
             try:
                 due = f"{e_year.get()}-{e_month.get()}-{e_day.get()}"
                 due_date = datetime.strptime(due, "%Y-%m-%d")
