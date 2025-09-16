@@ -1,6 +1,6 @@
 # Python-Asm
 
-Python-Asm is a TARUMT Student Assistant App developed as an assignment project by a team of three members. The app is designed to help students manage their academic life more efficiently by providing three core utilities:
+Python-Asm is a TARUMT Application Student Assistant App developed as an assignment project by a team of three members. The app is designed to help students manage their academic life more efficiently by providing three core utilities:
 
 - **CGPA & GPA Calculator**
 - **Homework Planner**
