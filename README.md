@@ -55,14 +55,12 @@ Python-Asm is a TARUMT Application Student Assistant App developed as an assignm
    cd Python-Asm
    ```
 3. **Install dependencies:**  
-   _If applicable, list required packages, e.g.:_
    ```bash
-   pip install -r requirements.txt
+   pip -m install Pillow
    ```
 4. **Run the app:**  
-   _Add instructions for running the project, e.g.:_
    ```bash
-   python main.py
+   python homepage.py
    ```
 
 ---
